@@ -1,0 +1,115 @@
+# Zustand Store (`src/app/store.ts`)
+
+## Purpose
+
+The `store.ts` file defines and manages the global state for the Time Ruler plugin using Zustand, a small, fast, and scalable state-management solution. This central store holds all critical application data, UI state, and references to major API services.
+
+## Store Definition and Hook
+
+*   **`useAppStore = createWithEqualityFn<AppState>(() => ({ ...initialState }))`**:
+    *   Creates the Zustand store using `createWithEqualityFn`. The `equalityFn` is not specified in the snippet but typically defaults to `Object.is` or can be customized (e.g., `shallow` from `zustand/shallow` for partial subscriptions).
+    *   The store is initialized with a default `AppState` object.
+
+*   **`useAppStoreRef<T>(callback: (state: AppState) => T)`**:
+    *   A custom hook that provides both the reactive store value (like `useAppStore(callback)`) and a `ref` (`storeValueRef`) that always holds the latest version of that selected state. This can be useful to avoid stale closures in callbacks or effects that don't re-subscribe on every render.
+    *   Returns `[storeValue, storeValueRef]`.
+
+## `AppState` Type Definition
+
+This type defines the shape of the global state:
+
+*   **`tasks: Record<string, TaskProps>`**: An object where keys are task IDs and values are `TaskProps` objects representing individual tasks.
+*   **`events: Record<string, EventProps>`**: An object where keys are event IDs and values are `EventProps` objects representing calendar events.
+*   **`apis: { obsidian?: ObsidianAPI; calendar?: CalendarAPI }`**: Holds instances of the core API service classes (`ObsidianAPI` and `CalendarAPI`).
+*   **`dragData: DragData | null`**: Stores data about the currently dragged item (task, block, group, etc.) during a drag-and-drop operation. `null` if nothing is being dragged.
+*   **`dragMode: 'ripple' | 'normal'`**: Defines the drag behavior mode (e.g., how dragging affects other items).
+*   **`findingTask: string | null`**: Stores the ID of a task that the application is currently trying to find and reveal in the UI.
+*   **`inScroll: number`**: (Usage not entirely clear from context, possibly related to scroll state or a counter).
+*   **`searchStatus: boolean`**: True if the search modal/UI is currently active.
+*   **`dailyNoteInfo: { format: string; folder: string; template: string }`**: Stores Obsidian's daily note configuration.
+*   **`fileOrder: string[]`**: An array of file paths, defining a custom sort order for files/groups in some views.
+*   **`newTask: null | { task: Partial<TaskProps>; type: 'new' | 'move' }`**: Holds temporary data for a task being created or moved via the `NewTask` component modal.
+*   **`settings: Pick<TimeRulerPlugin['settings'], ...>`**: A subset of the main plugin settings (`TimeRulerPlugin['settings']`) that are relevant to the reactive UI components. Includes:
+    *   `dayStartEnd: [number, number]`
+    *   `groupBy: 'path' | 'priority' | 'hybrid' | 'tags' | false`
+    *   `muted: boolean`
+    *   `timerEvent: 'notification' | 'sound'`
+    *   `twentyFourHourFormat: boolean`
+    *   `showCompleted: boolean`
+    *   `extendBlocks: boolean`
+    *   `hideTimes: boolean`
+    *   `borders: boolean`
+    *   `viewMode: 'hour' | 'day' | 'week'`
+    *   `scheduledSubtasks: boolean`
+*   **`collapsed: Record<string, boolean>`**: An object where keys are IDs (e.g., task IDs for subtask visibility, group heading paths, or special IDs like `TR_NOW`) and values are booleans indicating if the corresponding UI section is collapsed.
+*   **`showingPastDates: boolean`**: True if the UI should display past dates; false for current/future dates.
+*   **`searchWithinWeeks: [number, number]`**: A tuple representing the range of weeks (relative to today) to include in searches or data loading [past weeks, future weeks].
+*   **`childWidth: number`**: Represents the calculated number of logical columns that can fit in certain UI areas (e.g., for day view).
+*   **`timer: { negative: boolean; maxSeconds: number | null; startISO?: string; playing: boolean }`**: State for the built-in timer/stopwatch.
+    *   `negative`: True if timer has passed zero and is counting up.
+    *   `maxSeconds`: Total duration for a countdown; `null` for stopwatch.
+    *   `startISO`: Expiry ISO for countdown; start ISO for stopwatch.
+    *   `playing`: True if currently running.
+*   **`recreateWindow: number`**: A counter that, when changed, might signal components (like `useChildWidth`) to re-evaluate dimensions, typically after a layout change or window resize.
+*   **`dragOffset: number`**: Stores the horizontal offset calculated during task drag initiation, used for positioning the drag overlay.
+
+## Initial State
+
+The store is initialized with default values for all `AppState` properties, including empty objects for `tasks` and `events`, default settings values (some imported from `DEFAULT_SETTINGS` in `main.ts`), and sensible defaults for UI states.
+
+## `setters` Object
+
+This object provides functions to modify the store's state. It uses `immer`'s `produce` for safe and immutable updates.
+
+*   **`set(newState: Partial<AppState>)`**: A generic setter that merges a partial state into the current state.
+*   **`patchTasks(ids: string[], task: Partial<TaskProps>)`**:
+    *   Updates one or more tasks by their `ids` with the provided partial `task` data.
+    *   For each task, it merges the existing task data with the new partial data.
+    *   If `task.scheduled === TaskActions.DELETE` (a special enum value), it removes the `scheduled` property from the task.
+    *   Calls `obsidianAPI.saveTask()` for each modified task to persist changes to Markdown.
+    *   If `task.completion` is set (i.e., task completed), calls `obsidianAPI.playComplete()` for sound feedback.
+*   **`patchCollapsed(ids: string[], collapsed: boolean)`**: Updates the `collapsed` status for multiple IDs.
+*   **`updateFileOrder(file: string, beforeFile: string)`**: Calls `obsidianAPI.updateFileOrder()` to handle the logic of reordering files (which then likely updates the `fileOrder` state via `setSetting` in `ObsidianAPI`).
+*   **`patchTimer(timer: Partial<AppState['timer']>)`**: Merges partial updates into the `timer` state object.
+
+## `getters` Object
+
+This object provides functions to directly access parts of the store's state or derived data. It uses `useAppStore.getState()` to get the current state non-reactively.
+
+*   **`getEvent(id: string): EventProps | undefined`**: Retrieves a specific event by its ID.
+*   **`getTask(id: string): TaskProps | undefined`**: Retrieves a specific task by its ID.
+*   **`getObsidianAPI(): ObsidianAPI`**: Returns the `ObsidianAPI` instance.
+*   **`getCalendarAPI(): CalendarAPI`**: Returns the `CalendarAPI` instance.
+*   **`get<T extends keyof AppState>(key: T): AppState[T]`**: Retrieves any top-level state property by its key.
+*   **`getApp(): App`**: Returns the Obsidian `App` instance (via `apis.obsidian.app`).
+
+## Usage
+
+Components throughout the application use the `useAppStore` hook to subscribe to state changes and select specific parts of the state they need.
+
+```tsx
+// Example in a React component
+import { useAppStore, setters, getters } from 'src/app/store';
+
+function MyComponent() {
+  const tasks = useAppStore(state => state.tasks);
+  const settings = useAppStore(state => state.settings);
+  const dragData = useAppStore(state => state.dragData);
+
+  const handleCompleteTask = (taskId: string) => {
+    setters.patchTasks([taskId], { completed: true, completion: new Date().toISOString() });
+  };
+
+  // Non-reactive access if needed in a callback
+  const someCallback = () => {
+    const currentDragData = getters.get('dragData');
+    // ...
+  };
+
+  return (
+    // ... UI using tasks, settings, dragData ...
+  );
+}
+```
+
+The store acts as the single source of truth for the plugin, facilitating communication between different components and services and managing the overall application state in a structured way.
