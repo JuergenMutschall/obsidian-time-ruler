@@ -12,6 +12,8 @@ module.exports = {
   moduleNameMapper: {
     '^src/(.*)$': '<rootDir>/src/$1',
     'obsidian': '<rootDir>/src/tests/unit/__mocks__/obsidian.js', // Mock for Obsidian module
+    'obsidian-dataview': '<rootDir>/src/tests/unit/__mocks__/obsidian-dataview.js',
+    '^src/app/store$': '<rootDir>/src/tests/unit/__mocks__/store.js',
     '\.css$': 'identity-obj-proxy', // Mocks CSS imports
     '\.(mp3|wav)$': '<rootDir>/src/tests/unit/__mocks__/fileMock.js' // Mocks sound file imports
   },
