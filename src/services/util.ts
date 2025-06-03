@@ -46,7 +46,14 @@ export function deleteTextAtCaret(chars: number) {
   sel.deleteFromDocument()
 }
 
-export const isDateISO = (isoString: string) => isoString.length === 10
+export const isDateISO = (isoString: string) => {
+  if (!isoString || typeof isoString !== 'string') {
+    return false;
+  }
+  // Basic check for YYYY-MM-DD format and length
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  return isoString.length === 10 && isoDateRegex.test(isoString);
+}
 
 const NaNtoZero = (numberTest: number) =>
   isNaN(numberTest) ? 0 : typeof numberTest === 'number' ? numberTest : 0
@@ -88,9 +95,20 @@ export const parseFileFromPath = (path: string) => {
   if (path.includes('#')) path = path.slice(0, path.indexOf('#'))
   if (path.includes('>')) path = path.slice(0, path.indexOf('>'))
   if (path.includes('::')) path = path.slice(0, path.indexOf('::'))
+
+  // Handle "Daily" note case by converting to actual daily note path first
   if (path === 'Daily') {
+    // This part might rely on global getters for dailyNoteInfo for format,
+    // which can make pure unit testing harder without mocking getters.
+    // Assuming parsePathFromDate is testable or mocked elsewhere if it uses getters.
     path = parsePathFromDate(new Date().toISOString().slice(0, 10))
   }
+
+  // Extract filename after potential "Daily" path conversion
+  if (path.includes('/')) {
+    path = path.substring(path.lastIndexOf('/') + 1);
+  }
+
   if (!path.endsWith('.md')) path += '.md'
   return path
 }
