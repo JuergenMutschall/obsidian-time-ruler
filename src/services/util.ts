@@ -41,8 +41,16 @@ export function insertTextAtCaret(text: string) {
 export function deleteTextAtCaret(chars: number) {
   const sel = window.getSelection()
   if (!sel) return
-  // @ts-ignore
-  for (let i = 0; i < chars; i++) sel.modify('extend', 'backward', 'character')
+
+  if (typeof sel.modify === 'function') {
+    for (let i = 0; i < chars; i++) sel.modify('extend', 'backward', 'character');
+  } else {
+    // Optional: Fallback behavior or warning if 'modify' is not available,
+    // though for this specific use case, if it's missing, deletion might just not work as expected.
+    // Consider if a console.warn is appropriate if it's essential for core functionality.
+    // For now, just ensuring no runtime error if 'modify' is absent.
+    console.warn("Selection.modify() is not available in this environment. Text deletion at caret might not work as expected.");
+  }
   sel.deleteFromDocument()
 }
 
@@ -234,7 +242,7 @@ export const parseTaskDate = (
   tasks: AppState['tasks']
 ): string | undefined => {
   let currentParent = task
-  const parseDate = (task) => task.scheduled || task.completion
+  const parseDate = (task: TaskProps) => task.scheduled || task.completion
   // parents with later scheduled dates "pull" their children forward
   while (currentParent.parent) {
     const nextScheduled = parseDate(tasks[currentParent.parent])
@@ -400,10 +408,21 @@ export const queryTasks = (
   if (!paths && !tags && !fieldTests.length) return []
 
   const testField = (test: FieldTest, task: TaskProps): boolean => {
-    let value: string = task[test.key] ?? task.extraFields?.[test.key]
+    let value: string | undefined = undefined;
+    if (task.extraFields && Object.prototype.hasOwnProperty.call(task.extraFields, test.key)) {
+      value = task.extraFields[test.key]; // Assumes extraFields values are strings
+    }
+    if (value === undefined && Object.prototype.hasOwnProperty.call(task, test.key)) {
+      const directVal = (task as Record<string, any>)[test.key];
+      if (directVal !== undefined && directVal !== null) {
+          value = String(directVal); // Convert to string if found directly on task
+      }
+    }
     if (test.value === EXIST) return !!value
     if (test.value === NOT_EXIST) return !value
-    if (value === undefined) return false
+    // If value is still undefined at this point, and it's not an EXIST/NOT_EXIST check,
+    // then the field doesn't match or doesn't have a comparable value.
+    if (value === undefined) return false;
 
     switch (test.comparison) {
       case '=':

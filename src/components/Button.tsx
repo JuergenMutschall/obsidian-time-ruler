@@ -6,7 +6,7 @@ const Button = forwardRef<
   {
     className?: string
     src?: string
-  } & React.ButtonHTMLAttributes<HTMLElement>
+  } & React.HTMLAttributes<HTMLDivElement>
 >(({ className, src, children, ...rest }, ref) => {
   return (
     <div

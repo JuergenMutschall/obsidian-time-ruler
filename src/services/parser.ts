@@ -21,6 +21,28 @@ import {
   toISO,
 } from './util'
 
+// Interface for the item parameter in pageToTask
+export interface PageTaskData extends Record<string, Literal> {
+  file: PageMetadata;
+  scheduled?: DateTime | string;
+  length?: Duration;
+  duration?: Duration;
+  date?: DateTime | string;
+  allDay?: boolean;
+  startTime?: string;
+  endTime?: string;
+  completed?: boolean;
+  //priority in frontmatter can be string or number (e.g. from Tasks plugin)
+  priority?: string | number;
+  reminder?: DateTime | string;
+  due?: DateTime | string;
+  completion?: DateTime | string;
+  start?: DateTime | string;
+  created?: DateTime | string;
+  repeat?: string;
+  query?: string;
+}
+
 export const ISO_MATCH = '\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2})?'
 const TASKS_EMOJI_SEARCH = new RegExp(
   `[${_.values(keyToTasksEmoji).join('')}] ?(${ISO_MATCH})?`,
@@ -40,7 +62,7 @@ const KANBAN_DATE = / ?@\{(\d{4}-\d{2}-\d{2})\}/u
 const KANBAN_TIME = / ?@@\{(\d{2}:\d{2})\}/u
 
 export function textToTask(
-  item: any,
+  item: STask,
   dailyNoteInfo: AppState['dailyNoteInfo'],
   defaultFormat: TimeRulerPlugin['settings']['fieldFormat']
 ): TaskProps {
@@ -105,8 +127,8 @@ export function textToTask(
   }
 
   const parseScheduledAndLength = () => {
-    let rawScheduled = item.scheduled as DateTime | undefined
-    let rawLength = (item.length || item.duration) as Duration | undefined
+  let rawScheduled = item.scheduled
+  let rawLength = item.duration || (item as STask & { length?: Duration }).length
     let duration: TaskProps['duration']
     let scheduled: TaskProps['scheduled']
     if (rawLength && Duration.isDuration(rawLength))
@@ -150,9 +172,9 @@ export function textToTask(
       }
     }
 
-    if (!rawScheduled && !(typeof item.parent === 'number')) {
+    if (!rawScheduled && !(typeof item.parent === 'number')) { // typeof item.parent will always be 'object' or 'undefined' for STask. This condition might need review but changing type doesn't break it.
       // test note title
-      let titleDate = item.date as string | undefined
+      let titleDate = (item as STask & { date?: string | DateTime }).date as string | undefined // Assuming date can be string or DateTime
       const parsedPathDate = parseDateFromPath(item.path, dailyNoteInfo)
 
       if (parsedPathDate)
@@ -166,12 +188,14 @@ export function textToTask(
         minute: number | undefined = 0
       let endHour: number | undefined,
         endMinute: number | undefined = 0
-      if (item['startTime'] && typeof item['startTime'] === 'string') {
-        const splitStartTime = item['startTime'].split(':')
+      const itemStartTime = (item as STask & { startTime?: string })['startTime']
+      if (itemStartTime && typeof itemStartTime === 'string') {
+        const splitStartTime = itemStartTime.split(':')
         hour = parseInt(splitStartTime[0])
         minute = parseInt(splitStartTime[1])
-        if (item['endTime']) {
-          const splitEndTime = item['endTime'].split(':')
+        const itemEndTime = (item as STask & { endTime?: string })['endTime']
+        if (itemEndTime) {
+          const splitEndTime = itemEndTime.split(':')
           endHour = parseInt(splitEndTime[0])
           if (splitEndTime[1]) endMinute = parseInt(splitEndTime[1])
         }
@@ -265,14 +289,20 @@ export function textToTask(
   }
 
   const parsePriority = (): number => {
-    let priority = item['priority'] as number | string
+    // STask.priority is number. If a string priority is possible on the input object,
+    // it must be a custom field. We check for that first.
+    const customPriority = (item as STask & { priority?: string | number })['priority']
 
-    if (typeof priority === 'number') return priority
-    else if (typeof priority === 'string') {
-      priority = priority.toLowerCase()
-      return priorityKeyToNumber[priority] ?? TaskPriorities.DEFAULT
-    } else {
-      // tasks priority
+    if (typeof customPriority === 'string') {
+      return priorityKeyToNumber[customPriority.toLowerCase()] ?? TaskPriorities.DEFAULT
+    } else if (typeof customPriority === 'number') {
+      // If the custom field was a number, or item.priority (from STask) is used.
+      return customPriority
+    } else { // customPriority is undefined, fallback to STask.priority
+        if (typeof item.priority === 'number') return item.priority
+    }
+    // Default fallback if no priority found or if item.priority was not a number (should not happen for STask)
+    // Fallback for tasks emoji if no priority field
       for (let emoji of [
         keyToTasksEmoji.highest,
         keyToTasksEmoji.high,
@@ -293,14 +323,15 @@ export function textToTask(
   }
 
   const parseRepeat = () => {
-    return item['repeat'] ?? titleLine.match(TASKS_REPEAT_SEARCH)?.[1]
+    return (item as STask & { repeat?: string })['repeat'] ?? titleLine.match(TASKS_REPEAT_SEARCH)?.[1]
   }
 
   const parseQuery = () => {
-    if (!item.query) return undefined
-    if (!item.query.includes('"') && !/(^|\s)#|WHERE/.test(item.query))
-      return `"${item.query}"`
-    return item.query
+    const q = (item as STask & { query?: string }).query
+    if (!q) return undefined
+    if (!q.includes('"') && !/(^|\s)#|WHERE/.test(q))
+      return `"${q}"`
+    return q
   }
 
   const { length, scheduled } = parseScheduledAndLength()
@@ -362,7 +393,7 @@ export function textToTask(
 }
 
 export function pageToTask(
-  item: Record<string, Literal> & { file: PageMetadata },
+  item: PageTaskData,
   defaultFieldFormat: TimeRulerPlugin['settings']['fieldFormat']
 ): TaskProps {
   const testDateTime = (prop) =>
@@ -379,7 +410,7 @@ export function pageToTask(
   const parseScheduledAndLength = () => {
     let scheduled: TaskProps['scheduled'] = testDateTime(item.scheduled)
     let length: TaskProps['duration'] = testDuration(
-      item.length || item.duration
+      item.duration || item.length // Prefer item.duration if available
     )
     let isDate = false
     let startHours: number | undefined = undefined,
@@ -391,20 +422,20 @@ export function pageToTask(
       if (item.allDay) {
         isDate = true
         scheduled = date
-      } else if (typeof item.startTime === 'string') {
-        let [sampleHours, sampleMinutes] = item.startTime?.split(':')
+      } else if (item.startTime && typeof item.startTime === 'string') { // Added item.startTime null check for safety although type implies string
+        let [sampleHours, sampleMinutes] = item.startTime.split(':') // item.startTime is string here
         if (sampleHours !== undefined && sampleMinutes !== undefined) {
           startHours = parseInt(sampleHours)
           startMinutes = parseInt(sampleMinutes)
         }
         if (
-          typeof item.endTime === 'string' &&
+          item.endTime && typeof item.endTime === 'string' && // Added item.endTime null check
           startHours !== undefined &&
           startMinutes !== undefined
         ) {
           // read length from start & end times
-          let [sampleEndHours, sampleEndMinutes] = item.endTime.split(':')
-          if (sampleHours !== undefined && sampleMinutes !== undefined) {
+          let [sampleEndHours, sampleEndMinutes] = item.endTime.split(':') // item.endTime is string here
+          if (sampleHours !== undefined && sampleMinutes !== undefined) { // sampleHours should be string from split
             const endHours = parseInt(sampleEndHours)
             const endMinutes = parseInt(sampleEndMinutes)
             const endTime = DateTime.fromISO(date).set({
@@ -440,12 +471,13 @@ export function pageToTask(
   return {
     id: item.file.path,
     completed: item.completed ? true : false,
-    originalText: item.file.name as any,
+    originalText: item.file.name as any, // PageMetadata.name is 'string', so 'as any' is likely historical or for a non-standard PageMetadata
     path: item.file.path,
     priority:
       typeof item.priority === 'string'
-        ? priorityKeyToNumber[item.priority.toLowerCase()] ??
-          TaskPriorities.DEFAULT
+        ? priorityKeyToNumber[item.priority.toLowerCase()] ?? TaskPriorities.DEFAULT
+        : typeof item.priority === 'number' // Added check for number priority
+        ? item.priority
         : TaskPriorities.DEFAULT,
     children: [],
     page: true,
@@ -455,11 +487,11 @@ export function pageToTask(
     due: testDateTime(item.due),
     scheduled,
     duration: length,
-    tags: [...item.file.tags],
-    title: item.file.name as any,
-    originalTitle: item.file.name as any,
+    tags: [...item.file.tags], // PageMetadata.tags is string[]
+    title: item.file.name as any, // PageMetadata.name is 'string'
+    originalTitle: item.file.name as any, // PageMetadata.name is 'string'
     notes: '',
-    repeat: typeof item.repeat === 'string' ? item.repeat : undefined,
+    repeat: item.repeat && typeof item.repeat === 'string' ? item.repeat : undefined, // Added item.repeat null check
     extraFields: undefined,
     position: {
       start: { line: 0, col: 0, offset: 0 },
@@ -472,7 +504,7 @@ export function pageToTask(
     created: testDateTime(item.created),
     blockReference: undefined,
     fieldFormat,
-    query: (item.query as string) ?? undefined,
+    query: item.query && typeof item.query === 'string' ? item.query : undefined, // Added item.query null check
     links: [],
   }
 }

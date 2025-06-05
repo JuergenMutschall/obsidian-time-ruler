@@ -122,7 +122,8 @@ const modify = (modifier: (state: AppState) => void) =>
   useAppStore.setState(produce(modifier))
 
 export const setters = {
-  set: (newState: Partial<AppState>) => modify(() => newState),
+  // Uses Zustand's built-in setState for partial updates, which merges the new state.
+  set: (newState: Partial<AppState>) => useAppStore.setState(newState),
   patchTasks: async (ids: string[], task: Partial<TaskProps>) => {
     const obsidianAPI = getters.getObsidianAPI()
     for (let id of ids) {
