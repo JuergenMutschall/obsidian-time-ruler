@@ -10,8 +10,8 @@ if you want to view the source, please visit the github repository of this plugi
 */
 `
 
-const MODE = process.env.MODE
-const VAULT = process.env.VAULT
+const MODE = "development"; // "development" or "production", process.env.MODE
+const VAULT = "d:/work/dev-vault"
 
 let entryPoints = [`src/main.ts`, `src/styles.css`]
 
@@ -27,6 +27,8 @@ const plugins = [
 ]
 
 if (VAULT) {
+  console.log(`Building for Obsidian vault: ${VAULT}`);
+// If VAULT is set, copy static files to the Obsidian plugin directory
   plugins.push(
     esBuildCopyStaticFiles({
       src: `dist`,
@@ -36,6 +38,9 @@ if (VAULT) {
       preserveTimestamps: true,
     })
   )
+}
+else {
+  console.log("VAULT not set. Not copying static files to Obsidian plugin directory.");
 }
 
 const context = await esbuild.context({

@@ -18,5 +18,6 @@
     "resolveJsonModule": true,
     "jsxImportSource": "react"
   },
-  "include": ["src", "packages"]
+  "include": ["src", "packages"],
+  "exclude": ["src/tests/unit/__mocks__"]
 }
