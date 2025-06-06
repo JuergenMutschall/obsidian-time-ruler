@@ -17,6 +17,7 @@ module.exports = {
     '\.css$': 'identity-obj-proxy', // Mocks CSS imports
     '\.(mp3|wav)$': '<rootDir>/src/tests/unit/__mocks__/fileMock.js' // Mocks sound file imports
   },
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setupTests.ts'], // Added line
   // Specify roots for Jest to look for tests
   roots: [
     "<rootDir>/src"

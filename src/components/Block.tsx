@@ -250,6 +250,10 @@ export default function Block({
           <div
             className={`time-ruler-groups w-full relative z-10 h-fit ${
               type === 'event' ? 'pt-1 pl-1 pb-1' : ''
+            } ${
+              type === 'unscheduled'
+                ? 'flex overflow-y-hidden overflow-x-auto flex-col flex-wrap !w-full !h-full snap-x snap-mandatory'
+                : ''
             }`}
           >
             {sortedGroups.map(([path, tasks]) => {

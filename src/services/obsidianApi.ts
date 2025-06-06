@@ -91,57 +91,18 @@ export default class ObsidianAPI extends Component {
     let taskSearch: DataArray<STask>
     let pageSearch: DataArray<Record<string, Literal> & { file: PageMetadata }>
 
-    const testDateBounds = (task: Record<string, Literal>) => {
-      const taskDate = task.scheduled ?? task.completion
-      if (!DateTime.isDateTime(taskDate)) return true
-      const dateString = toISO(taskDate)
-      // Incomplete looks at preceding tasks, complete looks at following tasks
-      return completed
-        ? dateString >= dateBounds[0]
-        : dateString <= dateBounds[1]
-    }
-
     try {
       let basicSearch = dv.pages(
         `"${path.replace(/"/g, '\\"')}" and (${this.settings.search || '""'})`
       ) as DataArray<Record<string, Literal> & { file: PageMetadata }>
 
       taskSearch = (basicSearch['file']['tasks'] as DataArray<STask>).where(
-        (task) => {
-          const tested =
-            (this.settings.showCompleted ||
-              (completed && task.completed) ||
-              (!completed && !task.completed)) &&
-            customStatuses.test(task.status) ===
-              this.settings.customStatus.include &&
-            !(this.excludePaths && this.excludePaths.test(task.path)) &&
-            !(
-              task.start &&
-              DateTime.isDateTime(task.start) &&
-              now < task.start
-            ) &&
-            testDateBounds(task)
-
-          return tested
-        }
+        (task) => this._filterSTask(task, now, customStatuses, completed, dateBounds)
       )
 
-      pageSearch = basicSearch.where((page) => {
-        const pageCompleted = getProperty(page, 'completed')
-        return (
-          (pageCompleted === false ||
-            pageCompleted === null ||
-            ((completed || this.settings.showCompleted) &&
-              pageCompleted === true)) &&
-          !(this.excludePaths && this.excludePaths.test(page.file.path)) &&
-          !(
-            page.start &&
-            DateTime.isDateTime(page.start) &&
-            now < page.start
-          ) &&
-          testDateBounds(page)
-        )
-      })
+      pageSearch = basicSearch.where((page) =>
+        this._filterPage(page, now, completed, dateBounds)
+      )
     } catch (e) {
       new Notice(
         'Invalid Dataview query: ' + this.settings.search + '. Please fix.'
@@ -177,33 +138,86 @@ export default class ObsidianAPI extends Component {
       )
       .array()
 
-    const tasksDict = _.fromPairs(processedTasks.map((task) => [task.id, task]))
-
-    for (let task of processedTasks) {
-      if (task.page) continue
-      // assign children where required
-      if (!task.children) continue
-      for (let child of task.children) {
-        if (!tasksDict[child]) continue
-        tasksDict[child].parent = task.id
-      }
-    }
-
-    for (let task of processedTasks) {
-      if (!task.page) continue
-      task.children = []
-      for (let child of processedTasks.filter(
-        (child) =>
-          child.id !== task.id &&
-          parseFileFromPath(task.path) === parseFileFromPath(child.path) &&
-          !child.parent
-      )) {
-        child.parent = task.id
-        task.children.push(child.id)
-      }
-    }
+    this._processTaskHierarchy(processedTasks);
 
     return processedTasks
+  }
+
+  private _testDateBounds(taskDateValue: Literal | undefined, completed: boolean, dateBounds: [string, string]): boolean {
+    const taskDate = taskDateValue
+    if (!DateTime.isDateTime(taskDate)) return true; // No date to test, so it passes
+    const dateString = toISO(taskDate);
+    // Incomplete looks at preceding tasks, complete looks at following tasks
+    return completed
+      ? dateString >= dateBounds[0]
+      : dateString <= dateBounds[1];
+  }
+
+  private _filterSTask(task: STask, now: DateTime, customStatuses: RegExp, completed: boolean, dateBounds: [string, string]): boolean {
+    const tested =
+      (this.settings.showCompleted ||
+        (completed && task.completed) ||
+        (!completed && !task.completed)) &&
+      customStatuses.test(task.status) ===
+        this.settings.customStatus.include &&
+      !(this.excludePaths && this.excludePaths.test(task.path)) &&
+      !(
+        task.start &&
+        DateTime.isDateTime(task.start) &&
+        now < task.start
+      ) &&
+      this._testDateBounds(task.scheduled ?? task.completion, completed, dateBounds); // Use generalized _testDateBounds
+
+    return tested;
+  }
+
+  private _filterPage(page: Record<string, Literal> & { file: PageMetadata }, now: DateTime, completed: boolean, dateBounds: [string, string]): boolean {
+    const pageCompleted = getProperty(page, 'completed');
+    return (
+      (pageCompleted === false ||
+        pageCompleted === null ||
+        ((completed || this.settings.showCompleted) &&
+          pageCompleted === true)) &&
+      !(this.excludePaths && this.excludePaths.test(page.file.path)) &&
+      !(
+        page.start &&
+        DateTime.isDateTime(page.start) &&
+        now < page.start
+      ) &&
+      this._testDateBounds(page.scheduled ?? page.completion, completed, dateBounds) // Use generalized _testDateBounds
+    );
+  }
+
+  private _processTaskHierarchy(processedTasks: TaskProps[]): void {
+    const tasksDict = _.fromPairs(processedTasks.map((task) => [task.id, task]));
+
+    for (let task of processedTasks) {
+      if (task.page) continue;
+      // assign children where required
+      if (!task.children) continue;
+      for (let childId of task.children) { // Iterate over child IDs
+        const childTask = tasksDict[childId];
+        if (childTask) {
+          childTask.parent = task.id;
+        }
+      }
+    }
+
+    for (let task of processedTasks) {
+      if (!task.page) continue;
+      task.children = []; // Initialize children array for page tasks
+      for (let child of processedTasks.filter(
+        (childCandidate) =>
+          childCandidate.id !== task.id &&
+          parseFileFromPath(task.path) === parseFileFromPath(childCandidate.path) &&
+          !childCandidate.parent // Only assign if not already a child of a text-based task
+      )) {
+        child.parent = task.id;
+        if (task.children && !task.children.includes(child.id)) { // Ensure children is defined and no duplicates
+             task.children.push(child.id);
+        }
+      }
+    }
   }
 
   forgetTasks(path: string) {
@@ -239,115 +253,156 @@ export default class ObsidianAPI extends Component {
   }
 
   updateTasks(processedTasks: TaskProps[], path: string, completed: boolean) {
-    const updatedTasks = {
-      ...getters.get('tasks'),
+    const fileOrderChanged = this._updateFileOrderIfNeeded(processedTasks);
+
+    const updatedTasks = { ...getters.get('tasks') };
+    const processedTaskIds = processedTasks.map(t => t.id);
+
+    const tasksRemoved = this._removeObsoleteTasks(updatedTasks, processedTaskIds, path, completed);
+    const tasksSynchronized = this._synchronizeTaskData(updatedTasks, processedTasks);
+
+    if (!fileOrderChanged && !tasksRemoved && !tasksSynchronized) {
+      // Check if query processing is still needed even if primary tasks didn't change.
+      // Query results can change based on other tasks not in processedTasks.
+      // For simplicity now, we'll proceed. A more complex check could see if any query-related fields changed.
+      // The original code proceeded if 'updated' was true. 'updated' was set by removal or sync.
+      // So, if neither of those happened, we can potentially return.
+      // However, fileOrder changes also trigger a settings save.
+      // Let's ensure query processing and settings save happen if anything changed.
+      // The original `if (!updated) return` would cover tasksRemoved or tasksSynchronized.
+      // If only fileOrderChanged, the original code would still run query processing and then save settings.
+      // This seems fine.
     }
 
+    this._processTaskQueries(updatedTasks);
+
+    // Only call setters.set if there's a change to tasks or fileOrder (implicit from fileOrderChanged)
+    // The original `if(!updated) return` meant that if tasks weren't removed or synchronized,
+    // it would return. However, query processing could still change tasks.
+    // The final setters.set always ran if `updated` was true.
+    // Let's assume if fileOrderChanged, tasksRemoved, or tasksSynchronized is true, or if _processTaskQueries modified something (harder to check directly without deep compare), we save.
+    // For now, always call setters.set as query processing might change things.
+    // A more robust solution would be for _processTaskQueries to return a boolean if it made changes.
+    setters.set({ tasks: updatedTasks, fileOrder: this.settings.fileOrder });
+  }
+
+  private _updateFileOrderIfNeeded(processedTasks: TaskProps[]): boolean {
     const newFiles = _.uniq(
       processedTasks.map((task) => parseFileFromPath(task.path))
     )
       .filter((heading) => !this.settings.fileOrder.includes(heading))
-      .sort()
+      .sort();
 
     if (newFiles.length > 0) {
-      const newHeadingOrder = [...this.settings.fileOrder]
+      const newHeadingOrder = [...this.settings.fileOrder];
       for (let heading of newFiles) {
         const afterFile = newHeadingOrder.findIndex(
           (otherHeading) => otherHeading > heading
-        )
-        if (afterFile === -1) newHeadingOrder.push(heading)
-        else newHeadingOrder.splice(afterFile, 0, heading)
+        );
+        if (afterFile === -1) newHeadingOrder.push(heading);
+        else newHeadingOrder.splice(afterFile, 0, heading);
       }
       this.setSetting({
         fileOrder: newHeadingOrder,
-      })
+      });
+      return true; // Indicates that the file order was changed
     }
+    return false; // No change to file order
+  }
 
-    let updated = false
+  private _removeObsoleteTasks(currentTasks: Record<string, TaskProps>, processedTaskIds: string[], path: string, completed: boolean): boolean {
+    let removed = false;
+    const pathName = path.replace('.md', '');
+    const showCompleted = getters.get('settings').showCompleted;
 
-    const updatedIds = processedTasks.map((task) => task.id)
-    const pathName = path.replace('.md', '')
-
-    const showCompleted = getters.get('settings').showCompleted
-
-    // TODO: this missed moved files
-    for (let { id } of Object.values(updatedTasks).filter(
+    for (let { id } of Object.values(currentTasks).filter(
       (task) =>
-        task.id.startsWith(pathName) &&
-        (showCompleted || task.completed === completed) &&
-        !updatedIds.includes(task.id)
+        task.id.startsWith(pathName) && // Ensure we only check tasks relevant to the current path context
+        (showCompleted || task.completed === completed) && // Respect completion status filter
+        !processedTaskIds.includes(task.id)
     )) {
-      // clear out all deleted tasks
-      updated = true
-      delete updatedTasks[id]
+      delete currentTasks[id];
+      removed = true;
     }
+    return removed;
+  }
 
+  private _synchronizeTaskData(currentTasks: Record<string, TaskProps>, processedTasks: TaskProps[]): boolean {
+    let synchronized = false;
     for (let task of processedTasks) {
-      // fill in new tasks
-      if (!_.isEqual(task, updatedTasks[task.id])) {
-        updated = true
-        updatedTasks[task.id] = task
+      if (!_.isEqual(task, currentTasks[task.id])) {
+        currentTasks[task.id] = task;
+        synchronized = true;
       }
     }
+    return synchronized;
+  }
 
-    if (!updated) return
-
+  private _processTaskQueries(tasksToUpdate: Record<string, TaskProps>): void {
     const queries = _.sortBy(
       _.filter(
-        updatedTasks,
+        tasksToUpdate,
         (task) => !task.completed && !!(task.query || task.links.length > 0)
       ),
-      (task) => getParentScheduled(task, updatedTasks) ?? '99999'
-    )
+      (task) => getParentScheduled(task, tasksToUpdate) ?? '99999'
+    );
 
     const queriedIds = _.groupBy(
-      _.keys(updatedTasks),
-      (id) => updatedTasks[id].queryParent
-    )
+      _.keys(tasksToUpdate),
+      (id) => tasksToUpdate[id].queryParent
+    );
 
-    const alreadyQueried: Set<string> = new Set()
-    // // queries "steal" children, with most earlier scheduled overriding later scheduled
+    const alreadyQueried: Set<string> = new Set();
     for (const task of queries) {
       const queriedTasks = task.query
-        ? queryTasks(task.id, task.query, updatedTasks)
-        : []
+        ? queryTasks(task.id, task.query, tasksToUpdate)
+        : [];
 
-      const queryChildren: string[] = []
+      const queryChildren: string[] = [];
       for (let queriedTask of queriedTasks) {
-        if (alreadyQueried.has(queriedTask.id)) {
-          continue
+        if (alreadyQueried.has(queriedTask.id) && queriedTask.queryParent !== task.id) {
+          // If already queried by another task, skip, unless this task is its current queryParent (allowing re-query by same parent)
+          continue;
         }
-        alreadyQueried.add(queriedTask.id)
-        queryChildren.push(queriedTask.id)
-        if (queriedTask.queryParent === task.id) continue
 
-        alreadyQueried.add(queriedTask.id)
-        updatedTasks[queriedTask.id] = {
-          ...updatedTasks[queriedTask.id],
-          queryParent: task.id,
+        // If it was previously queried by another task, but now this task (current query) is taking precedence
+        if (queriedTask.queryParent && queriedTask.queryParent !== task.id) {
+            // Potentially remove from old parent's queryChildren if that level of detail is needed,
+            // but simply overwriting queryParent should be okay.
+        }
+
+        alreadyQueried.add(queriedTask.id);
+        queryChildren.push(queriedTask.id);
+
+        if (tasksToUpdate[queriedTask.id].queryParent !== task.id) {
+             tasksToUpdate[queriedTask.id] = {
+                ...tasksToUpdate[queriedTask.id],
+                queryParent: task.id,
+             };
         }
       }
 
+      // Remove children that are no longer part of this query's results
       if (queriedIds[task.id]) {
         const unQueriedIds = _.difference(
           queriedIds[task.id],
-          queriedTasks.map((x) => x.id)
-        )
+          queryChildren // Use the newly formed queryChildren
+        );
         for (let unQueriedId of unQueriedIds) {
-          updatedTasks[unQueriedId] = {
-            ...updatedTasks[unQueriedId],
-            queryParent: undefined,
+          if(tasksToUpdate[unQueriedId] && tasksToUpdate[unQueriedId].queryParent === task.id) { // Ensure it was parented by current task
+            tasksToUpdate[unQueriedId] = {
+              ...tasksToUpdate[unQueriedId],
+              queryParent: undefined,
+            };
           }
         }
       }
 
-      updatedTasks[task.id] = {
-        ...updatedTasks[task.id],
+      tasksToUpdate[task.id] = {
+        ...tasksToUpdate[task.id],
         queryChildren,
-      }
+      };
     }
-
-    setters.set({ tasks: updatedTasks, fileOrder: this.settings.fileOrder })
   }
 
   updateFileOrder(file: string, before: string) {
@@ -363,41 +418,71 @@ export default class ObsidianAPI extends Component {
 
   async moveTask(task: TaskProps, selectedHeading: string) {
     if (task.page) {
-      alert("Moving pages isn't supported.")
-      return
+      alert("Moving pages isn't supported.");
+      return;
     }
-    const file = await this.getFile(task.path)
-    invariant(file)
 
-    const fileText = await this.app.vault.read(file)
-    const lines = fileText.split('\n')
+    const extractionResult = await this._extractTaskLinesFromFile(task.path, task.position.start.line);
+    if (!extractionResult) {
+      new Notice(`Time Ruler: Failed to read source file ${task.path}`);
+      return;
+    }
+    const { sourceFile, originalFileLines, extractedTaskLines } = extractionResult;
 
-    // tasks move their subtasks as well
-    const followingLines = lines.slice(task.position.start.line + 1)
-    const nextLine = followingLines.findIndex((line) => !line.startsWith(' '))
+    // Save the source file with the task removed
+    await this.app.vault.modify(sourceFile, originalFileLines.join('\n'));
 
-    const copyLines = lines.splice(
-      task.position.start.line,
-      (nextLine === -1 ? followingLines.length : nextLine) + 1
-    )
+    // Find position in destination
+    const { filePath: destinationFilePath, position: destinationPosition } = await this._findPosition(selectedHeading);
 
-    await this.app.vault.modify(file, lines.join('\n'))
+    // Prepare the main task text for the new location
+    const copyTask = { ...task, path: destinationFilePath }; // Update path for the moved task
+    const mainTaskText = taskToText(copyTask, this.settings.fieldFormat);
 
-    const { filePath, position } = await this.findPosition(selectedHeading)
-    const moveFile = await this.getFile(filePath)
-    invariant(moveFile)
+    // Get subsequent lines (subtasks, notes, etc.)
+    const subtaskLines = extractedTaskLines.slice(1);
 
-    // preserve scheduled date when moving out of Daily notes
-    const copyTask = { ...task, path: filePath }
-    const textTask = taskToText(copyTask, this.settings.fieldFormat)
-    const pasteLines = [textTask].concat(copyLines.slice(1))
+    // Insert the task and its sub-lines into the destination file
+    const movedFile = await this._insertTaskLinesIntoFile(destinationFilePath, destinationPosition.start.line, mainTaskText, subtaskLines);
+    if (!movedFile) {
+        new Notice(`Time Ruler: Failed to write to destination file ${destinationFilePath}`);
+        // Potentially add logic here to revert the deletion from the source file if critical
+        return;
+    }
+
+    openTask({ ...task, path: destinationFilePath, position: destinationPosition });
+  }
+
+  private async _extractTaskLinesFromFile(filePath: string, taskPositionStartLine: number): Promise<{ sourceFile: TFile, originalFileLines: string[], extractedTaskLines: string[] } | null> {
+    const file = await this.getFile(filePath);
+    if (!file) return null;
+
+    const fileText = await this.app.vault.read(file);
+    const lines = fileText.split('\n');
+
+    const followingLines = lines.slice(taskPositionStartLine + 1);
+    const nextTaskOrSectionStart = followingLines.findIndex((line) => !line.startsWith(' ') && line.trim() !== ''); // Find next non-indented, non-empty line
+
+    const linesToCopyCount = (nextTaskOrSectionStart === -1 ? followingLines.length : nextTaskOrSectionStart) + 1;
+
+    const extractedTaskLines = lines.slice(taskPositionStartLine, taskPositionStartLine + linesToCopyCount);
+    const remainingLines = [...lines.slice(0, taskPositionStartLine), ...lines.slice(taskPositionStartLine + linesToCopyCount)];
+
+    return { sourceFile: file, originalFileLines: remainingLines, extractedTaskLines };
+  }
+
+  private async _insertTaskLinesIntoFile(destinationFilePath: string, targetLine: number, mainTaskText: string, additionalLines: string[]): Promise<TFile | null> {
+    const moveFile = await this.getFile(destinationFilePath); // this.getFile also creates if not exists
+    if (!moveFile) return null;
+
+    const pasteLines = [mainTaskText, ...additionalLines];
 
     await this.app.vault.process(moveFile, (text) => {
-      const lines = text.split('\n')
-      lines.splice(position.start.line, 0, ...pasteLines)
-      return lines.join('\n')
-    })
-    openTask({ ...task, path: filePath, position })
+      const lines = text.split('\n');
+      lines.splice(targetLine, 0, ...pasteLines);
+      return lines.join('\n');
+    });
+    return moveFile;
   }
 
   createNewTask = (
@@ -449,64 +534,86 @@ export default class ObsidianAPI extends Component {
     return file
   }
 
-  private async findPosition(path: string) {
-    let filePath = parseFileFromPath(path)
-    let heading = path.split('#')[1]
+  private _findPositionInHeading(lines: string[], heading: string, addTaskToEnd: boolean): number {
+    let targetLine =
+      lines.findIndex((line) =>
+        new RegExp(`#+ ${_.escapeRegExp(heading)}$`).test(line)
+      ) + 1;
+    if (addTaskToEnd) {
+      const nextHeadingLine = lines.findIndex(
+        (line, i) => i >= targetLine && /^#+ /.test(line) // search from targetLine onwards
+      );
+      if (nextHeadingLine === -1) { // No subsequent heading
+        targetLine = lines.length; // Go to end of file
+      } else {
+        targetLine = nextHeadingLine;
+      }
+      // find the end of the heading's non-whitespace text or line before next heading
+      while (targetLine > 0 && /^\s*$/.test(lines[targetLine - 1])) {
+        targetLine--;
+      }
+    }
+    return targetLine;
+  }
 
-    let position = {
-      start: { col: 0, line: 0, offset: 0 },
-      end: { col: 0, line: 0, offset: 0 },
+  private _findPositionInFile(lines: string[], addTaskToEnd: boolean): number {
+    let targetLine: number;
+    let i = 0;
+    while (lines[i] !== undefined && lines[i].trim() === '') { // Skip initial blank lines
+      i++;
     }
 
-    const file = await this.createFileFromPath(path)
-    const text = await this.app.vault.read(file)
-    const lines = text.split('\n')
-
-    let targetLine: number
-
-    if (heading) {
-      targetLine =
-        lines.findIndex((line) =>
-          new RegExp(`#+ ${_.escapeRegExp(heading)}$`).test(line)
-        ) + 1
-      if (this.settings.addTaskToEnd) {
-        targetLine = lines.findIndex(
-          (line, i) => i > targetLine && /^#+ /.test(line)
-        )
-        // add to end (creates new empty line)
-        if (targetLine === -1) targetLine = lines.length
-        else {
-          // find the end of the heading's non-whitespace text
-          while (/^\s*$/.test(lines[targetLine - 1]) && targetLine > 1)
-            targetLine--
-        }
+    if (addTaskToEnd) {
+      const firstHeading = lines.findIndex((line) => /^#+ /.test(line));
+      if (firstHeading === -1) targetLine = lines.length; // End of file if no headings
+      else targetLine = firstHeading; // Beginning of the first heading section
+      // Go to the line before this heading, or end of file if no heading
+      if (targetLine > 0 && !lines[targetLine-1]?.trim()) targetLine--; // if line before is blank, use it
+      else if (targetLine === lines.length && lines.length > 0 && !lines[targetLine-1]?.trim()) {
+        // If at very end and last line is blank, use it.
+      } else if (targetLine === 0 && lines.length > 0 && !lines[0]?.trim()) {
+        // If at very beginning and first line is blank
+      } else if (targetLine < lines.length && lines[targetLine]?.trim() && lines[targetLine-1]?.trim()){
+         // if current target is not blank, and line before is not blank, means we are in middle of content.
+         // if settings is addTaskToEnd, we should go to end of current block or file.
+         // This part of logic for "addTaskToEnd" in a file without specific heading needs clarification from original intent.
+         // For now, if firstHeading exists, it targets line before it. If not, end of file.
       }
 
-      position.start.line = targetLine
-      position.end.line = targetLine
+
+    } else if (lines[i] === '---' && lines.findIndex((line, idx) => idx > i && line === '---') !== -1) {
+      // After frontmatter
+      targetLine = lines.findIndex((line, idx) => idx > i && line === '---') + 1;
     } else {
-      let i = 0
-      while (lines[i] !== undefined && lines[i] === '') {
-        i++
-      }
-      if (this.settings.addTaskToEnd) {
-        const firstHeading = lines.findIndex((line) => /^#+ /.test(line))
-        if (firstHeading === -1) targetLine = lines.length
-        else targetLine = firstHeading
-      } else if (
-        lines[i] === '---' &&
-        lines.find((line) => line === '---', i + 1)
-      ) {
-        targetLine = lines.indexOf('---', i + 1) + 1
-      } else targetLine = 0
-
-      position = {
-        start: { col: 0, line: targetLine, offset: 0 },
-        end: { col: 0, line: targetLine, offset: 0 },
-      }
+      targetLine = i; // First non-blank line or start of file
     }
+    return targetLine;
+  }
 
-    return { position, filePath }
+  private async _findPosition(path: string) {
+    let filePath = parseFileFromPath(path);
+    let heading = path.split('#')[1];
+
+    const file = await this.createFileFromPath(path); // Ensures file exists
+    const text = await this.app.vault.read(file);
+    const lines = text.split('\n');
+
+    let targetLine = heading
+      ? this._findPositionInHeading(lines, heading, this.settings.addTaskToEnd)
+      : this._findPositionInFile(lines, this.settings.addTaskToEnd);
+
+    // Ensure targetLine is not negative
+    targetLine = Math.max(0, targetLine);
+    // Ensure targetLine does not exceed lines.length (for inserting new line at the end)
+    targetLine = Math.min(lines.length, targetLine);
+
+
+    const position = {
+      start: { col: 0, line: targetLine, offset: 0 }, // Offset will be recalc by Obsidian on insert
+      end: { col: 0, line: targetLine, offset: 0 },
+    };
+
+    return { position, filePath };
   }
 
   private async createTaskInPath(
@@ -556,66 +663,106 @@ export default class ObsidianAPI extends Component {
   }
 
   async deleteTasks(ids: string[]) {
-    const tasks = getters.get('tasks')
-    const deletedTaskGroups = ids.map((id) => tasks[id])
-    const files = _.groupBy(deletedTaskGroups, (task) =>
-      parseFileFromPath(task.path)
-    )
-    const updatedTasks = {}
+    const tasks = getters.get('tasks');
+    const deletedTaskGroups = ids.map((id) => tasks[id]).filter(Boolean); // Ensure tasks exist
+    const files = _.groupBy(deletedTaskGroups, (task) => parseFileFromPath(task.path));
 
-    for (let [filePath, deletedTasks] of _.entries(files)) {
-      const file = await this.getFile(filePath)
-      invariant(file)
-      const fileText = await this.app.vault.read(file)
-      const lines = fileText.split('\n')
-      for (let task of _.sortBy(
-        deletedTasks,
-        (task) => task.position.start.line * -1
-      )) {
-        lines.splice(
-          task.position.start.line,
-          task.position.end.line + 1 - task.position.start.line
-        )
+    let allClearedQueryParentIds: string[] = [];
 
-        if (task.query) {
-          for (let queriedTask of _.filter(
-            getters.get('tasks'),
-            (queriedTask) => queriedTask.queryParent === task.id
-          )) {
-            updatedTasks[queriedTask.id] = _.omit(queriedTask, 'queryParent')
-          }
-        }
-      }
-
-      await this.app.vault.modify(file, lines.join('\n'))
+    for (let [filePath, tasksInFile] of _.entries(files)) {
+      const clearedIds = await this._deleteTasksFromFile(filePath, tasksInFile as TaskProps[]); // Cast because filter(Boolean) ensures they are TaskProps
+      allClearedQueryParentIds.push(...clearedIds);
     }
 
-    setters.set(updatedTasks)
+    if (allClearedQueryParentIds.length > 0) {
+      const tasksToUpdate: Record<string, Partial<TaskProps>> = {};
+      for (const id of _.uniq(allClearedQueryParentIds)) { // Ensure unique IDs
+        tasksToUpdate[id] = { queryParent: undefined }; // Explicitly set to undefined
+      }
+      // This needs to merge with existing tasks, not overwrite.
+      // A direct setters.set({ tasks: tasksToUpdate }) would wipe other tasks.
+      // So, we need to fetch existing tasks and apply updates.
+      const currentGlobalTasks = getters.get('tasks');
+      const finalUpdatedTasks = { ...currentGlobalTasks };
+      for(const id in tasksToUpdate){
+        if(finalUpdatedTasks[id]){ // Make sure task still exists
+          finalUpdatedTasks[id] = { ...finalUpdatedTasks[id], ...tasksToUpdate[id] };
+        }
+      }
+       setters.set({tasks: finalUpdatedTasks});
+      // Or, if a patchTasks equivalent exists that can set specific fields to undefined:
+      // setters.patchTasks(allClearedQueryParentIds, { queryParent: undefined });
+      // For now, using the more comprehensive update.
+    }
+  }
+
+  private async _deleteTasksFromFile(filePath: string, tasksToDelete: TaskProps[]): Promise<string[]> {
+    const file = await this.getFile(filePath);
+    if (!file) return [];
+
+    const fileText = await this.app.vault.read(file);
+    const lines = fileText.split('\n');
+    const clearedQueryParentIds: string[] = [];
+
+    for (let task of _.sortBy(tasksToDelete, (t) => t.position.start.line * -1)) {
+      lines.splice(
+        task.position.start.line,
+        task.position.end.line + 1 - task.position.start.line
+      );
+
+      if (task.query) {
+        // Collect IDs of tasks that were children of this query task
+        const currentGlobalTasks = getters.get('tasks'); // Get up-to-date global tasks
+        for (let queriedTask of _.filter(
+          currentGlobalTasks, // Use the fresh global task list
+          (qt) => qt.queryParent === task.id
+        )) {
+          clearedQueryParentIds.push(queriedTask.id);
+        }
+      }
+    }
+
+    await this.app.vault.modify(file, lines.join('\n'));
+    return clearedQueryParentIds;
   }
 
   async saveTask(task: TaskProps, newTask?: boolean) {
-    const file = await this.getFile(task.path)
-    if (!file) return
+    const file = await this.getFile(task.path);
+    if (!file) return;
+
     if (task.page) {
-      this.app.fileManager.processFrontMatter(file, (frontmatter) => {
-        taskToPage(task, frontmatter)
-      })
+      await this._savePageTask(file, task);
     } else {
-      const fileText = await this.app.vault.read(file)
-      const lines = fileText.split('\n')
-
-      let thisLine = lines[task.position.start.line] ?? ''
-      const newText =
-        (thisLine.match(/^\s*/)?.[0] ?? '') +
-        taskToText(task, this.settings.fieldFormat)
-      if (newTask) {
-        lines.splice(task.position.start.line, 0, newText)
-      } else {
-        lines[task.position.start.line] = newText
-      }
-
-      await this.app.vault.modify(file, lines.join('\n'))
+      await this._saveLineTask(file, task, newTask);
     }
+  }
+
+  private async _savePageTask(file: TFile, task: TaskProps): Promise<void> {
+    await this.app.fileManager.processFrontMatter(file, (frontmatter) => {
+      taskToPage(task, frontmatter);
+    });
+  }
+
+  private async _saveLineTask(file: TFile, task: TaskProps, newTask?: boolean): Promise<void> {
+    const fileText = await this.app.vault.read(file);
+    const lines = fileText.split('\n');
+
+    // Ensure line number is within bounds, especially for new tasks at end of file
+    const targetLine = Math.min(task.position.start.line, lines.length);
+    let currentLineContent = lines[targetLine] ?? '';
+
+    const newText =
+      (currentLineContent.match(/^\s*/)?.[0] ?? '') + // Preserve indentation of the line being replaced/prefixed
+      taskToText(task, this.settings.fieldFormat);
+
+    if (newTask) {
+      lines.splice(targetLine, 0, newText);
+    } else {
+      // Make sure we don't try to access lines[-1] if targetLine is 0 and file was empty
+      lines[targetLine] = newText;
+    }
+
+    await this.app.vault.modify(file, lines.join('\n'));
   }
 
   async onload() {

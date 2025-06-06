@@ -10,7 +10,7 @@ const Button = forwardRef<
 >(({ className, src, children, ...rest }, ref) => {
   return (
     <div
-      className={`transition-colors duration-300 clickable-icon whitespace-nowrap font-menu text-sm ${className}`}
+      className={`transition-colors duration-300 clickable-icon mouse:hover:bg-hover whitespace-nowrap font-menu text-sm ${className}`}
       {...rest}
       ref={ref}
     >

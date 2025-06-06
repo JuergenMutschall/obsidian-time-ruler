@@ -17,7 +17,7 @@ const TaskCheckbox: React.FC<TaskCheckboxProps> = (props) => {
       onPointerDown={() => false} // Prevent drag initiation on checkbox click
       onClick={onComplete}
       className={`
-        task-list-item-checkbox selectable flex flex-none items-center justify-center
+        task-list-item-checkbox flex flex-none items-center justify-center
         rounded-checkbox border border-solid border-faint p-0 text-xs shadow-none
         hover:border-normal cursor-pointer
         ${isLink ? 'h-2 w-2' : isMobile ? 'h-5 w-5' : 'h-4 w-4'}
