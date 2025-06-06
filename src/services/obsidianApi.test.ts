@@ -1,4 +1,5 @@
-import ObsidianAPI from './obsidianApi'; // Adjust path
+const ActualObsidianAPIModule = jest.requireActual('./obsidianApi'); // Simplified
+const ObsidianAPI = ActualObsidianAPIModule.default;
 import { DEFAULT_SETTINGS } from '../main'; // Adjust path for settings
 import { App } from 'obsidian'; // For type, will be mocked
 // getAPI as getDataviewAPI -- not needed if we use jest.mock directly on the module path
@@ -72,6 +73,8 @@ describe('ObsidianAPI', () => {
     // Deep clone DEFAULT_SETTINGS to ensure each test gets a fresh copy
     mockSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
 
+    console.log("ActualObsidianAPIModule:", ActualObsidianAPIModule);
+    console.log("ObsidianAPI (ActualObsidianAPIModule.default):", ObsidianAPI);
     obsidianApi = new ObsidianAPI(mockSettings as any, mockSetSetting, mockApp as App);
 
     // Reset and configure mockDvPages for each test

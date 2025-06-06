@@ -34,5 +34,41 @@ module.exports = {
     },
     // Add any other app properties/methods as needed
   })),
+  ItemView: class {
+    constructor() {
+      this.icon = '';
+      this.leaf = {
+        view: this,
+        on: jest.fn(),
+        open: jest.fn(),
+      };
+      this.app = {
+        workspace: {
+          on: jest.fn(),
+        }
+      };
+    }
+    getViewType() { return ''; }
+    onOpen() { return Promise.resolve(); }
+    onClose() { return Promise.resolve(); }
+  },
+  PluginSettingTab: class {
+    constructor(app, plugin) {
+      this.app = app;
+      this.plugin = plugin;
+    }
+    display() {}
+  },
+  Plugin: class {
+    constructor(app, manifest) {
+      this.app = app;
+      this.manifest = manifest;
+    }
+    onload() {}
+    onunload() {}
+    registerView(type, constructor) {}
+    addSettingTab(tab) {}
+    registerMarkdownCodeBlockProcessor(id, handler) {}
+  },
   // Add other exports as needed by your components
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { TaskProps, TaskPriorities, priorityNumberToSimplePriority } from '../types'; // Assuming types are in a 'types' folder at root or similar
+import { TaskPriorities, priorityNumberToSimplePriority } from '../types/enums';
 import Logo from './Logo'; // Assuming Logo is in the same directory
 import { DateTime } from 'luxon';
 import { DraggableAttributes } from '@dnd-kit/core';
