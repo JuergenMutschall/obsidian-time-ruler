@@ -59,6 +59,8 @@ export function textToTask(
 
   let originalTitle: string = titleLine
     .replace(BLOCK_REFERENCE, '')
+    // Remove task/list markers early before format-specific parsing
+    .replace(/^([\s]*[-*+] \[[^\]]*\]\s*|[\s]*[-*+]\s+)/u, '')
     .replace(INLINE_FIELD_SEARCH, '')
     .replace(HASHTAG_SEARCH, '')
     .replace(REMINDER_MATCH, '')
@@ -80,9 +82,10 @@ export function textToTask(
       .replace(KANBAN_TIME, '')
   }
 
-  let title: string = originalTitle
+  let title: string = originalTitle // originalTitle has already had markers removed
     .replace(MD_LINK_LINE_SEARCH, '$1')
     .replace(LINK_SEARCH, '[$1]')
+    // No need to remove markers again here
     .replace(/^\s+/u, '')
     .replace(/\s+$/u, '')
 
@@ -122,9 +125,15 @@ export function textToTask(
     // test for date
     if (!rawScheduled) {
       // test inline
-      const inlineDate =
-        new RegExp(`${keyToTasksEmoji.scheduled} ?(${ISO_MATCH})`)?.[1] ??
-        titleLine.match(SIMPLE_SCHEDULED_DATE)?.[1]
+      // Match SIMPLE_SCHEDULED_DATE on titleLine, allowing for an optional leading task marker.
+      const dateMatchResult = titleLine.match(/^(?:[\s]*[-*+] \[[^\]]*\]\s*|[\s]*[-*+]\s+)?(\d{4}-\d{2}-\d{2}) /u);
+      const justDateString = dateMatchResult ? dateMatchResult[1] : undefined; // Extract only the date.
+
+      // Isolate the emoji-based parsing for 'scheduled' to debug
+      const scheduledDateMatch = item.text.match(new RegExp(`${keyToTasksEmoji.scheduled} ?(${ISO_MATCH})`));
+      const inlineDateFromEmoji = scheduledDateMatch ? scheduledDateMatch[1] : undefined;
+
+      const inlineDate = inlineDateFromEmoji ?? justDateString; // Use the extracted date string.
       if (inlineDate) {
         rawScheduled = DateTime.fromISO(inlineDate)
         if (!isDateISO(inlineDate)) isDate = false
@@ -176,9 +185,12 @@ export function textToTask(
           if (splitEndTime[1]) endMinute = parseInt(splitEndTime[1])
         }
       } else {
-        const titleWithoutDate = titleLine.replace(SIMPLE_SCHEDULED_DATE, '')
-        const simpleScheduledTime = titleWithoutDate.match(
-          SIMPLE_SCHEDULED_TIME
+        // For time matching, prepare a string by removing optional marker and optional date from titleLine.
+        let lineForTimeMatch = titleLine.replace(/^([\s]*[-*+] \[[^\]]*\]\s*|[\s]*[-*+]\s+)/u, ''); // Remove marker
+        lineForTimeMatch = lineForTimeMatch.replace(SIMPLE_SCHEDULED_DATE, ''); // Remove date part if it was at the start
+
+        const simpleScheduledTime = lineForTimeMatch.match(
+          SIMPLE_SCHEDULED_TIME // This is ^-anchored
         )?.[1]
         if (simpleScheduledTime) {
           const fullTime = simpleScheduledTime.split(/ ?- ?/)
@@ -485,7 +497,7 @@ const detectFieldFormat = (
     if (SIMPLE_SCHEDULED_DATE.test(text) || SIMPLE_DUE.test(text))
       return 'simple'
     for (let emoji of Object.keys(TasksEmojiToKey)) {
-      if (text.contains(emoji)) return 'tasks'
+      if (text.includes(emoji)) return 'tasks'
     }
     if (KANBAN_DATE.test(text)) return 'kanban'
     if (/\[allDay:: |\[date:: |\[startTime:: |\[endTime:: /.test(text))
@@ -495,8 +507,13 @@ const detectFieldFormat = (
   }
 
   const parseReminder = (): FieldFormat['reminder'] => {
-    if (text.contains(keyToTasksEmoji.reminder)) return 'tasks'
-    return 'native'
+    // Simpler detection for reminder format based on task.originalText
+    if (text.includes(keyToTasksEmoji.reminder)) return 'tasks'; // ⏰
+    // Regex for @{YYYY-MM-DD HH:mm} or @{YYYY-MM-DD}
+    if (/@\{(\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?)\}/u.test(text)) return 'kanban';
+    // Regex for (@YYYY-MM-DD HH:mm) or (@YYYY-MM-DD)
+    if (/\(@(\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?)\)/u.test(text)) return 'native';
+    return 'native'; // Default if no specific format detected in originalText
   }
 
   const parseScheduled = (): FieldFormat['scheduled'] => {
