@@ -227,3 +227,47 @@ This document provides an overview of the React components used in the Time Rule
     *   Contains a `div` with ID `COLLAPSE_UNSCHEDULED` which is likely a portal target for a collapse button managed by the `Block` component when `type='unscheduled'`.
     *   Renders a single `Block` component of `type='unscheduled'` to display all the filtered unscheduled tasks.
     *   The `childWidth` prop influences the layout of tasks within this block.
+
+## AppInitializer.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskCheckbox.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskContent.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskDetails.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskNotes.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskSubtaskList.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskTags.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TaskTitle.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TimeRulerHeader.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TimelineView.tsx
+
+*   **Purpose**: [Placeholder - To be updated with component details]
+
+## TimelineViewHandle.ts
+
+*   **Purpose**: [Placeholder - To be updated with component details]
