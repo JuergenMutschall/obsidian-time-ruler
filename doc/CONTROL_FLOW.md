@@ -142,3 +142,232 @@ This document outlines the typical control flow for several common user interact
     *   Clears `findingTask` in the store.
 
 These flows illustrate the reactive nature of the plugin, where user actions often lead to store updates, which in turn trigger service calls (especially `ObsidianAPI` for file system changes), followed by further store updates based on those changes, and finally, UI re-renders to reflect the new state.
+
+---
+
+## 5. Changing a Plugin Setting
+
+This flow describes changing a setting like "Show Completed Tasks" or "24 Hour Format".
+
+1.  **User Action**:
+    *   Opens the Obsidian settings.
+    *   Navigates to the "Time Ruler" plugin settings tab.
+    *   Interacts with a setting control (e.g., toggles the "Show Completed Tasks" switch).
+
+2.  **Settings UI (`SettingsTab` in `src/plugin/SettingsTab.tsx`)**:
+    *   The `onChange` handler for the specific setting control (e.g., a `Toggle` component) is triggered.
+    *   Inside the handler:
+        *   `this.plugin.settings.showCompleted = value;` (the new value of the toggle is assigned).
+        *   `this.plugin.saveSettings();` is called.
+
+3.  **Plugin Class (`TimeRulerPlugin` in `src/main.ts`)**:
+    *   `saveSettings()`: This method calls `this.saveData(this.settings)`.
+    *   Obsidian's plugin API handles saving the `this.settings` object (which now contains the modified `showCompleted` value) to the plugin's `data.json` file in the vault's configuration directory.
+
+4.  **UI Update (Reactive via Store)**:
+    *   Although the setting is saved, the Time Ruler view itself needs to react to this change. This typically happens when the view is next reloaded or when settings are explicitly propagated to the store.
+    *   **View Reload / Settings Propagation**:
+        *   When the Time Ruler view is active, the `ObsidianAPI` instance (in `src/services/obsidianApi.ts`) holds a reference to the plugin settings.
+        *   The `AppInitializer` component (or a similar mechanism in `App.tsx`) is responsible for reading settings from `ObsidianAPI` (which gets them from `plugin.settings`) and putting them into the Zustand store.
+        *   `AppInitializer`'s `reload` function (called on initial load and potentially on other events) would execute:
+            *   `const settings = { muted: apis.obsidian.getSetting('muted'), ... };` (collects all relevant settings).
+            *   `setters.set({ settings });` to update the settings object within the Zustand store.
+    *   **Component Re-render**:
+        *   React components within `App.tsx` (e.g., `TimelineView`, `Day`, `Task`) are subscribed to the `settings` part of the Zustand store (e.g., `useAppStore(state => state.settings.showCompleted)`).
+        *   When the `settings.showCompleted` value changes in the store, these components automatically re-render.
+        *   For example, if `showCompleted` is true, tasks that are marked as complete will now be visible. If false, they will be filtered out from rendering. The filtering logic is often within selectors or directly in the rendering map functions of components like `Day.tsx` or `Group.tsx`.
+
+### Mermaid Diagram: Changing a Plugin Setting
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant SettingsTab (UI)
+    participant TimeRulerPlugin
+    participant ObsidianDataStorage
+    participant AppInitializer
+    participant ZustandStore
+    participant ReactComponents
+
+    User->>SettingsTab (UI): Modifies 'Show Completed' toggle
+    SettingsTab (UI)->>TimeRulerPlugin: plugin.settings.showCompleted = newValue
+    SettingsTab (UI)->>TimeRulerPlugin: plugin.saveSettings()
+    TimeRulerPlugin->>ObsidianDataStorage: saveData(plugin.settings)
+    ObsidianDataStorage-->>TimeRulerPlugin: Settings persisted
+
+    Note over AppInitializer, ZustandStore: On next view load or settings refresh cycle
+
+    AppInitializer->>TimeRulerPlugin: Reads settings (via ObsidianAPI)
+    TimeRulerPlugin-->>AppInitializer: Returns current settings
+    AppInitializer->>ZustandStore: setters.set({ settings: newSettingsObject })
+
+    ZustandStore-->>ReactComponents: Notifies of state.settings change
+    ReactComponents->>ReactComponents: Re-render based on new 'showCompleted' value (tasks filtered/displayed)
+```
+
+---
+
+## 6. Editing an Existing Task (e.g., Changing Title or Date via UI)
+
+This flow assumes there's a UI mechanism to edit a task's properties directly within the Time Ruler view, potentially by clicking on a task to bring up a modal or inline editing fields.
+
+1.  **User Action**:
+    *   Clicks on a specific field of a `Task` component (e.g., the task title, a date field).
+    *   Alternatively, clicks an "edit" button on a task.
+
+2.  **React Component (`Task.tsx` or a dedicated Edit Modal Component)**:
+    *   The click handler is triggered.
+    *   This might set some local component state to switch to "edit mode" (e.g., replacing text with an input field).
+    *   Or, it might set state in the Zustand store to open a centralized edit modal, passing the task's ID: `setters.set({ editingTask: { id: task.id, ...taskData } })`.
+
+3.  **User Input**:
+    *   User modifies the task's properties in the input field(s) or modal.
+    *   For example, changes the task title, or updates a date using a date picker.
+
+4.  **Saving Changes**:
+    *   User clicks a "Save" button or blurs an input field.
+    *   The component's event handler for this action is triggered.
+    *   It collects the modified task data.
+    *   It calls `setters.patchTasks([taskId], { title: newTitle, scheduled: newScheduledDate, ... })`.
+
+5.  **Store & Persistence (`setters.patchTasks` in `src/app/store.ts`)**:
+    *   Merges the new/updated properties with the existing task data for the given `taskId`.
+    *   Calls `getters.getObsidianAPI().saveTask(updatedTaskProps)`.
+    *   **`ObsidianAPI.saveTask()` (`src/services/obsidianApi.ts`)**:
+        *   Reads the Markdown file containing the task.
+        *   Uses `parser.ts` (`taskToText`) to convert the `updatedTaskProps` back into its Markdown string representation. This is crucial to correctly format any changed dates, title, or other metadata.
+        *   Replaces the old task line in the file content with the new task line.
+        *   Writes the modified content back to the Markdown file using Obsidian's API.
+    *   The local store state for the task is updated (this might happen optimistically before or after `saveTask`).
+    *   If a modal was used, it's closed by clearing the `editingTask` state: `setters.set({ editingTask: null })`.
+
+6.  **Dataview & UI Refresh**:
+    *   The file modification by `ObsidianAPI.saveTask()` is detected by Dataview.
+    *   Dataview updates its index.
+    *   If `ObsidianAPI` has a listener for `dataview:metadata-change` (as seen in other flows), it might trigger `obsidianAPI.loadTasks()` for the specific file. This ensures the store has the canonical version of the task post-save.
+    *   React components subscribed to this task in the Zustand store re-render to display the updated information.
+
+### Mermaid Diagram: Editing an Existing Task
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant TaskComponent (UI)
+    participant EditModalOrInlineEditor (UI)
+    participant ZustandStore
+    participant ObsidianService
+    participant ParserService
+    participant ObsidianFS
+    participant Dataview
+
+    User->>TaskComponent (UI): Clicks 'Edit' or a field on a task
+    TaskComponent (UI)->>ZustandStore: setters.set({ editingTask: taskDetails }) (if modal)
+    TaskComponent (UI)->>EditModalOrInlineEditor (UI): Switches to edit mode / Renders modal
+
+    User->>EditModalOrInlineEditor (UI): Modifies task properties (e.g., title, date)
+    EditModalOrInlineEditor (UI)->>ZustandStore: User clicks 'Save' -> setters.patchTasks(taskId, updatedProps)
+
+    ZustandStore->>ObsidianService: saveTask(updatedTaskProps)
+    ObsidianService->>ObsidianFS: Reads original file
+    ObsidianFS-->>ObsidianService: Original file content
+    ObsidianService->>ParserService: taskToText(updatedTaskProps)
+    ParserService-->>ObsidianService: New Markdown string for the task
+    ObsidianService->>ObsidianFS: Writes modified file content
+    ObsidianFS-->>Dataview: File changed event
+    Dataview->>Dataview: Updates internal index
+
+    Note over ObsidianService, ZustandStore: Optionally, metadata-change triggers task reload
+    ObsidianService->>ZustandStore: Updates task from Dataview (confirms save)
+
+    ZustandStore-->>TaskComponent (UI): Notifies of state change for the task
+    ZustandStore-->>EditModalOrInlineEditor (UI): setters.set({ editingTask: null }) (closes modal)
+    TaskComponent (UI)->>TaskComponent (UI): Re-renders with updated task information
+```
+
+---
+
+## 7. Revealing a Task in Time Ruler from Editor Context Menu
+
+This flow describes how a task viewed in a Markdown editor can be located and shown within the Time Ruler plugin.
+
+1.  **User Action**:
+    *   User is viewing/editing a Markdown file in Obsidian.
+    *   User right-clicks on a line that represents a task.
+    *   Selects "Reveal in Time Ruler" from the editor context menu.
+
+2.  **Plugin Setup (`TimeRulerPlugin` in `src/main.ts` - `onload`)**:
+    *   During plugin initialization, an event listener for the editor menu is registered:
+        `this.app.workspace.on('editor-menu', (menu, _, context) => this.openMenu(menu, context))`
+
+3.  **Context Menu Population (`openMenu` in `src/main.ts`)**:
+    *   When the user right-clicks in an editor, the `openMenu` method is called.
+    *   It checks if the cursor is on a line that looks like a task (`/ *- \[ \] /`).
+    *   If it is, it adds an item to the menu:
+        `menu.addItem((item) => item.setIcon('ruler').setTitle('Reveal in Time Ruler').onClick(() => this.jumpToTask(context)))`
+
+4.  **User Clicks Menu Item**:
+    *   The `onClick` handler calls `this.jumpToTask(context)`.
+    *   `context` is `MarkdownView | MarkdownFileInfo`.
+
+5.  **`jumpToTask(context)` Method (`src/main.ts`)**:
+    *   Ensures `context.file` and `context.editor` are available.
+    *   Gets the current file path and cursor line number.
+    *   Validates that the current line is indeed a task. If not, shows a `Notice`.
+    *   **Activate/Reveal View**:
+        *   Checks if the Time Ruler view (`TIME_RULER_VIEW`) is already open: `this.app.workspace.getLeavesOfType(TIME_RULER_VIEW)?.[0]`.
+        *   If not open, it calls `this.activateView()` to open the Time Ruler.
+        *   If open but not active, it calls `this.app.workspace.revealLeaf(leaf)` to bring it to the forefront.
+    *   **Triggering Task Reveal in UI**:
+        *   Calls `openTaskInRuler(path + '::' + cursor.line)`. Note: `openTaskInRuler` is imported from `src/services/obsidianApi.ts` but is actually a function that directly interacts with the store and UI scrolling, not part of the `ObsidianAPI` class typically. It seems to be a utility function within that file, possibly exposed for this specific purpose.
+
+6.  **`openTaskInRuler(id: string)` (utility in `src/services/obsidianApi.ts`)**:
+    *   `id` is a composite ID like `filePath::lineNumber`.
+    *   Retrieves the task from the Zustand store: `const task = getters.getTask(id)`.
+    *   **Date Adjustments (if necessary)**:
+        *   If the task's scheduled date is in the past and `showingPastDates` is false, it updates `setters.set({ showingPastDates: true })`.
+        *   If the task's scheduled date is outside the current `searchWithinWeeks` range, it expands the range: `setters.set({ searchWithinWeeks: newRange })`. This ensures the task's date range becomes visible.
+    *   Calls `scrollToSection(task.scheduled)` (from `src/services/util.ts`):
+        *   This function likely scrolls the main timeline view (`#time-ruler-times > div`) to the correct date section based on the task's scheduled date.
+    *   **Highlighting the Task**:
+        *   Sets `setters.set({ findingTask: id })` to indicate which task is being sought.
+        *   A `useEffect` hook likely in `Task.tsx` or `TimelineView.tsx` observes `findingTask`. When it matches a task's ID:
+            *   The task's DOM element (`document.querySelector(\`[data-id="\${id}"]\`)`) is scrolled into view using `element.scrollIntoView()`.
+            *   A temporary highlight class might be added to the task element.
+            *   `setters.set({ findingTask: null })` is called after a short delay to remove the highlight or clear the state.
+
+7.  **UI Update**:
+    *   The Time Ruler view (if not already open) appears.
+    *   The view scrolls to the section containing the task.
+    *   The specific task is scrolled into view and briefly highlighted.
+
+### Mermaid Diagram: Revealing Task from Editor
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Editor (Obsidian)
+    participant TimeRulerPlugin (main.ts)
+    participant TimeRulerView (UI)
+    participant openTaskInRuler (obsidianApi.ts util)
+    participant ZustandStore
+    participant DOM/UI_Scroll_Highlight
+
+    User->>Editor (Obsidian): Right-clicks on task line
+    Editor (Obsidian)->>TimeRulerPlugin (main.ts): Triggers 'editor-menu' event -> openMenu()
+    TimeRulerPlugin (main.ts)->>TimeRulerPlugin (main.ts): Adds "Reveal in Time Ruler" menu item
+
+    User->>TimeRulerPlugin (main.ts): Clicks "Reveal in Time Ruler"
+    TimeRulerPlugin (main.ts)->>TimeRulerPlugin (main.ts): jumpToTask(context)
+    TimeRulerPlugin (main.ts)->>TimeRulerView (UI): activateView() if not open
+    TimeRulerPlugin (main.ts)->>openTaskInRuler (obsidianApi.ts util): openTaskInRuler(taskId)
+
+    openTaskInRuler (obsidianApi.ts util)->>ZustandStore: getTask(taskId)
+    ZustandStore-->>openTaskInRuler (obsidianApi.ts util): Returns task data
+    openTaskInRuler (obsidianApi.ts util)->>ZustandStore: setters.set({ showingPastDates, searchWithinWeeks }) (if needed)
+    openTaskInRuler (obsidianApi.ts util)->>DOM/UI_Scroll_Highlight: scrollToSection(task.scheduled)
+    openTaskInRuler (obsidianApi.ts util)->>ZustandStore: setters.set({ findingTask: taskId })
+
+    ZustandStore-->>DOM/UI_Scroll_Highlight: Notifies of findingTask change
+    DOM/UI_Scroll_Highlight->>DOM/UI_Scroll_Highlight: Finds DOM element, scrolls into view, highlights
+    DOM/UI_Scroll_Highlight->>ZustandStore: setters.set({ findingTask: null }) (after delay)
+```

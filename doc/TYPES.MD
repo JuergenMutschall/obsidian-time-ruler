@@ -1,12 +1,47 @@
 # Common Data Types and Interfaces
 
-This document outlines the key data structures and interfaces used throughout the Time Ruler plugin, primarily defined in `src/types/index.d.ts` and `src/types/enums.ts`.
+This document outlines the key data structures and interfaces used throughout the Time Ruler plugin, primarily defined in `src/types/index.d.ts`, `src/main.ts`, and `src/types/enums.ts`.
+
+## Plugin Settings
+
+### `TimeRulerSettings`
+
+Defined in `src/main.ts`, this type specifies the structure for all settings managed by the Time Ruler plugin.
+
+```typescript
+type TimeRulerSettings = {
+  calendars: string[]; // Array of iCalendar URLs
+  fieldFormat: FieldFormat['main']; // Preferred format for task metadata (dataview, tasks, etc.)
+  muted: boolean; // Whether sound effects are muted
+  timerEvent: 'notification' | 'sound'; // Event type when a timer completes
+  inbox: string | null; // Path to a default inbox note for new tasks
+  search: string; // Custom Dataview query for filtering pages
+  taskSearch: string; // Text filter for tasks
+  fileOrder: string[]; // User-defined order of files in the view
+  customStatus: { // Configuration for custom task statuses
+    include: boolean; // True to include specified statuses, false to exclude
+    statuses: string; // String of status characters (e.g., "-/?!")
+  };
+  showCompleted: boolean; // Whether to display completed tasks
+  dayStartEnd: [number, number]; // Start and end hours for the timeline view (e.g., [0, 24])
+  groupBy: false | 'priority' | 'path' | 'hybrid' | 'tags'; // How tasks are grouped
+  twentyFourHourFormat: boolean; // Whether to use 24-hour time format
+  filterFunction: string; // Custom JavaScript function for filtering tasks
+  addTaskToEnd: boolean; // Whether to add new tasks to the end of a file/section
+  extendBlocks: boolean; // Whether to extend time blocks to the next block
+  hideTimes: boolean; // Whether to hide times on tasks in the view
+  borders: boolean; // Whether to show borders around day/time blocks
+  viewMode: 'hour' | 'day' | 'week'; // Current view mode for the timeline
+  scheduledSubtasks: boolean; // Whether to show unscheduled subtasks under their parent
+  openInMain: boolean; // Whether to open Time Ruler in the main pane by default
+};
+```
 
 ## Core Data Structures
 
 ### `TaskProps`
 
-This is the central interface representing a task within the Time Ruler plugin.
+This is the central interface representing a task within the Time Ruler plugin. Defined in `src/types/index.d.ts`.
 
 ```typescript
 type TaskProps = {
@@ -49,7 +84,7 @@ type TaskProps = {
 
 ### `EventProps`
 
-Represents a calendar event fetched from an iCalendar feed.
+Represents a calendar event fetched from an iCalendar feed. Defined in `src/types/index.d.ts`.
 
 ```typescript
 type EventProps = {
@@ -86,6 +121,8 @@ type BlockProps = {
 
 ## Drag and Drop Types
 
+Defined in `src/types/index.d.ts`.
+
 ### `DragData`
 
 A discriminated union representing the data associated with an item being dragged. The `dragType` property determines the specific shape.
@@ -107,7 +144,7 @@ type DragData =
   | ({ dragType: 'due' } & { task: TaskProps }) // When dragging a task's due date handle
   | { dragType: 'new_button' }; // When dragging the "new task" button
 ```
-*Note: `GroupComponentProps` and `BlockComponentProps` are component prop types that include underlying data like `TaskProps[]`.*
+*Note: `GroupComponentProps`, `TaskComponentProps`, and `BlockComponentProps` are component prop types that typically include underlying data like `TaskProps[]` or `TaskProps`.*
 
 ### `DropData`
 
@@ -125,7 +162,7 @@ type DropData =
 
 ### `FieldFormat`
 
-Describes the detected or default syntax for task metadata within a task line or page.
+Describes the detected or default syntax for task metadata within a task line or page. Defined in `src/types/index.d.ts`.
 
 ```typescript
 type FieldFormat = {
@@ -135,13 +172,48 @@ type FieldFormat = {
 };
 ```
 
+## Google Calendar Types (from `src/types/index.d.ts`)
+
+These types are defined but may or may not be actively used if Google Calendar integration is not fully implemented or enabled.
+
+### `GoogleEvent`
+```typescript
+type GoogleEvent = {
+  id: string;
+  summary?: string;
+  description?: string;
+  location?: string;
+} & (
+  | {
+      start: { date: string; dateTime?: null };
+      end: { date: string; dateTime?: null };
+    }
+  | {
+      start: { dateTime: string; date?: null };
+      end: { dateTime: string; date?: null };
+    }
+);
+```
+
+### `GoogleCalendar`
+```typescript
+type GoogleCalendar = {
+  id: string;
+  summary: string;
+  backgroundColor: string;
+  primary: boolean;
+  deleted: boolean;
+};
+```
+
 ## Enums and Mappings (from `src/types/enums.ts`)
 
-These provide standardized values and conversions for task properties.
+These provide standardized values and conversions for task properties. The definitions below are based on the summary from a previous documentation version and assume they exist in `src/types/enums.ts`.
 
 ### `TaskActions`
 
 ```typescript
+// Assumed definition in src/types/enums.ts
 export enum TaskActions {
   DELETE = 'DELETE', // Special value used in setters.patchTasks to indicate deletion
 }
@@ -149,8 +221,8 @@ export enum TaskActions {
 
 ### `TaskPriorities`
 
-Defines numeric values for different priority levels.
 ```typescript
+// Assumed definition in src/types/enums.ts
 export enum TaskPriorities {
   HIGHEST, // 0
   HIGH,    // 1
@@ -161,25 +233,25 @@ export enum TaskPriorities {
 }
 ```
 
-### Priority Mappings
+### Priority Mappings (Assumed from `src/types/enums.ts`)
 
 *   **`priorityKeyToNumber: Record<string, TaskPriorities>`**: Maps string keys (e.g., "highest") to `TaskPriorities` numbers.
 *   **`simplePriorityToNumber: Record<string, TaskPriorities>`**: Maps simple text symbols (e.g., "!!!", "!!", "!") to `TaskPriorities` numbers.
 *   **`priorityNumberToSimplePriority: Record<TaskPriorities, string>`**: Inverse of `simplePriorityToNumber`.
 *   **`priorityNumberToKey: Record<TaskPriorities, string>`**: Inverse of `priorityKeyToNumber`.
 
-### Tasks Plugin Emoji Mappings
+### Tasks Plugin Emoji Mappings (Assumed from `src/types/enums.ts`)
 
 *   **`keyToTasksEmoji: Record<string, string>`**: Maps metadata keys (e.g., "scheduled", "due", "priority_high") to their corresponding "Tasks" plugin style emojis (e.g., "⏳", "📅", "⏫").
 *   **`TasksEmojiToKey: Record<string, string>`**: Inverse of `keyToTasksEmoji`.
 
-### `RESERVED_FIELDS: string[]`
+### `RESERVED_FIELDS: string[]` (Assumed from `src/types/enums.ts`)
 
-An array of strings listing field names that are considered reserved (e.g., by Dataview, Tasks plugin, Full Calendar plugin, or Time Ruler itself) and should not be treated as generic `extraFields` in `TaskProps`.
+An array of strings listing field names that are considered reserved and should not be treated as generic `extraFields`.
 
-### `isTaskProps(data: DropData): data is Partial<TaskProps>`
+### `isTaskProps(data: DropData): data is Partial<TaskProps>` (Assumed from `src/types/enums.ts`)
 
-A type guard function to check if a `DropData` object is likely a `Partial<TaskProps>` (used for scheduling) rather than a special drop zone type like 'heading' or 'delete'.
+A type guard function.
 
 ## Obsidian Interface Extensions
 
