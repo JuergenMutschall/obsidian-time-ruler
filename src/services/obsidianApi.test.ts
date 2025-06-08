@@ -44,7 +44,7 @@ jest.mock('obsidian', () => ({
 describe('ObsidianAPI', () => {
   let mockApp: any;
   let mockSetSetting: jest.Mock;
-  let obsidianApi: ObsidianAPI;
+  let obsidianApi: InstanceType<typeof ObsidianAPI>;
   let mockSettings: typeof DEFAULT_SETTINGS;
 
   beforeEach(() => {

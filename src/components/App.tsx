@@ -28,7 +28,6 @@ import { useAutoScroll } from '../services/autoScroll'
 import { getDailyNoteInfo } from '../services/obsidianApi' // Needed for reload
 import {
   getStartDate,
-  getStartDate,
   getToday,
   roundMinutes,
   // scrollToSection, // This is in AppInitializer
@@ -37,7 +36,7 @@ import {
 } from '../services/util'
 import AppInitializer from './AppInitializer'
 import Block from './Block'
-// import Day from './Day'; // Moved to TimelineView
+import Day from './Day'; // Moved to TimelineView
 import Group from './Group'
 import { TimeSpanTypes } from './Minutes' // Still needed for TimesType definition
 import NewTask from './NewTask'
@@ -45,11 +44,9 @@ import Search from './Search'
 import Task from './Task'
 import TimeRulerHeader from './TimeRulerHeader'
 // import Unscheduled from './Unscheduled'; // Moved to TimelineView
-import TimelineView from './TimelineView';
+import TimelineView, { ActualTimesType } from './TimelineView'; // Import ActualTimesType
 import { TimelineViewHandle } from './TimelineViewHandle'; // Import the handle type
 import { isCallChain } from 'typescript'
-
-type TimesType = (Parameters<typeof Day>[0] | { type: 'unscheduled' })[]
 
 // Simplified TimesType for props passed to TimeRulerHeader
 // This matches the simplification in TimeRulerHeader.tsx
@@ -130,7 +127,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
   const dayStart = useAppStore((state) => state.settings.dayStartEnd[0])
   const showCompleted = useAppStore((state) => state.settings.showCompleted)
 
-  const times: TimesType = [
+  const times: ActualTimesType = [ // Changed TimesType to ActualTimesType
     { type: 'unscheduled' },
     {
       startISO:
@@ -201,7 +198,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
 
     switch (activeDrag.dragType) {
       case 'task':
-        return <Task {...activeDrag} dragging />
+        return <Task {...activeDrag} dragging /> // Reverted to dragging
       case 'task-length':
       case 'time':
         return <></>

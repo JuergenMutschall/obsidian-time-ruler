@@ -40,11 +40,13 @@ const TaskTitle: React.FC<TaskTitleProps> = (props) => {
     let keyCounter = 0; // For unique keys
 
     while ((match = regex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(<span key={`text-${keyCounter++}`}>{text.substring(lastIndex, match.index)}</span>);
-      }
+      const matchIndex = match.index;
+      if (typeof matchIndex === 'number') {
+        if (matchIndex > lastIndex) {
+          parts.push(<span key={`text-${keyCounter++}`}>{text.substring(lastIndex, matchIndex)}</span>);
+        }
 
-      const linkText = match[1];
+        const linkText = match[1];
       parts.push(
         <span
           key={`link-${keyCounter++}`}
@@ -57,7 +59,8 @@ const TaskTitle: React.FC<TaskTitleProps> = (props) => {
           {linkText}
         </span>
       );
-      lastIndex = regex.lastIndex;
+        lastIndex = regex.lastIndex;
+      }
     }
 
     if (lastIndex < text.length) {

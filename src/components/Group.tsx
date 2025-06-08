@@ -101,7 +101,7 @@ export default function Group({
     <div
       ref={!isPriority ? setNodeRef : undefined}
       className={`w-full overflow-hidden time-ruler-group ${
-        props.type === 'unscheduled' ? 'max-h-full !overflow-y-auto snap-start' : ''
+        type === 'unscheduled' ? 'max-h-full !overflow-y-auto snap-start' : ''
       }`}
       data-id={`${headingPath}::${dragContainer}::${type}`}
     >

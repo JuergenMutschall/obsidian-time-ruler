@@ -1,4 +1,5 @@
 import { useDraggable } from '@dnd-kit/core'
+import { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'; // Corrected import path
 import _ from 'lodash'
 import { DateTime } from 'luxon'
 import { getters, setters, useAppStore } from '../app/store'
@@ -42,9 +43,9 @@ export default function Task({
   startISO,
   subtasks,
   renderType,
-  dragging,
+  dragging, // Reverted to dragging
   ...task
-}: TaskComponentProps & { dragging?: true }) {
+}: TaskComponentProps & { dragging?: true }) { // Reverted to dragging
   const completeTask = () => {
     setters.patchTasks([task.id], {
       completion: toISO(roundMinutes(DateTime.now()), true),
@@ -195,10 +196,11 @@ export default function Task({
   const showingPastDates = useAppStore((state) => state.showingPastDates)
   const today = getToday()
   const now = DateTime.now().toISO()
-  const hasLengthDrag =
+  const hasLengthDrag: boolean = !!(
     task.scheduled &&
     !isDateISO(task.scheduled) &&
     !(showingPastDates ? task.scheduled > today : task.scheduled < now)
+  );
 
   // Get the computed style for the body element
   const computedStyle = getComputedStyle(document.body)
@@ -211,6 +213,30 @@ export default function Task({
   const handleOpenTask = () => openTask(task); // Create stable callback
 
   const isMobile = useMemo(() => getters.getObsidianAPI().app.isMobile, [])
+
+  const isCurrentlyDragging: boolean = !!dragging; // Reverted to dragging
+  const currentLengthListeners: SyntheticListenerMap = lengthListeners || {};
+
+  // Explicitly define props for TaskContent
+  const taskContentProps = {
+    task: task,
+    renderType: renderType,
+    isLink: isLink || false,
+    lineHeightNormal: lineHeightNormal,
+    onOpenTask: handleOpenTask,
+    taskPath: task.path,
+    startISO: startISO,
+    hasLengthDrag: hasLengthDrag,
+    mainTaskDragging: isCurrentlyDragging,
+    dndAttributes: attributes,
+    dndListeners: listeners || {}, // Added fallback for undefined listeners
+    setLengthNodeRef: setLengthNodeRef,
+    lengthAttributes: lengthAttributes,
+    lengthListeners: currentLengthListeners,
+    setDeadlineNodeRef: setDeadlineNodeRef,
+    deadlineAttributes: deadlineAttributes,
+    deadlineListeners: deadlineListeners,
+  };
 
   return (
     <div
@@ -228,34 +254,15 @@ export default function Task({
           <TaskCheckbox
             completed={task.completed}
             status={task.status}
-            isLink={isLink}
+            isLink={isLink || false}
             isMobile={isMobile}
             onComplete={completeTask}
           />
         </div>
-        <TaskContent
-          task={task}
-          renderType={renderType}
-          isLink={isLink}
-          // status={task.status} // status is part of task, TaskContent passes it to children
-          lineHeightNormal={lineHeightNormal}
-          onOpenTask={handleOpenTask}
-          taskPath={task.path}
-          startISO={startISO}
-          hasLengthDrag={hasLengthDrag}
-          mainTaskDragging={dragging} // Pass the main task's dragging state
-          dndAttributes={attributes} // From main useDraggable
-          dndListeners={listeners}   // From main useDraggable
-          setLengthNodeRef={setLengthNodeRef}
-          lengthAttributes={lengthAttributes}
-          lengthListeners={lengthListeners}
-          setDeadlineNodeRef={setDeadlineNodeRef}
-          deadlineAttributes={deadlineAttributes}
-          deadlineListeners={deadlineListeners}
-        />
+        <TaskContent {...taskContentProps} />
       </div>
       <TaskTags tags={task.tags} groupBy={groupBy} />
-      <TaskNotes notes={task.notes} isLink={isLink} />
+      <TaskNotes notes={task.notes} isLink={isLink || false} />
       <TaskSubtaskList
         taskId={task.id}
         task={task}

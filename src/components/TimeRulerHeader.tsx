@@ -19,17 +19,9 @@ import { TimeSpanTypes } from './Minutes'; // Assuming TimesType might be needed
                                          // it might need to be moved to a shared types file.
                                          // For now, I'll include what seems directly related.
 
-// Copied from App.tsx and renamed from Buttons
-// Props might need adjustment if TimesType is not fully moved or is simplified.
-// For now, let's assume TimesType will be simplified or defined here.
-// Placeholder for TimesType definition if needed
-type TimesType = (Parameters<typeof Day>[0] | { type: 'unscheduled' })[]
-// This is a forward declaration/placeholder. We'll need to define Day or adjust this.
-// Since Day is not being moved, this will likely cause an issue.
-// For now, I will use a simpler type for times or expect it to be passed.
-// A better approach would be to define TimesType in a shared file.
-
 // Simplified TimesType for now
+// This type is used for the 'times' prop in this component.
+// It's a simplified version, different from the one in TimelineView or App.tsx
 type SimplifiedTimesType = { startISO?: string; type: 'unscheduled' | string }[];
 
 
@@ -40,6 +32,7 @@ const TimeRulerHeader = ({
   setupStore,
   showingPastDates,
   timelineViewRef, // Added timelineViewRef
+  datesShown, // Added datesShown
 }: {
   times: SimplifiedTimesType;
   weeksShownState: number;
@@ -47,6 +40,7 @@ const TimeRulerHeader = ({
   setupStore: () => void;
   showingPastDates: boolean;
   timelineViewRef?: React.RefObject<TimelineViewHandle | undefined>; // Optional for safety
+  datesShown: number; // Added datesShown
 }) => {
   const now = DateTime.now();
   const viewMode = useAppStore((state) => state.settings.viewMode);

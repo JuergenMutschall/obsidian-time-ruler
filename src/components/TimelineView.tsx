@@ -7,7 +7,7 @@ import { getStartDate } from '../services/util';
 import { AppState } from '../app/store';
 import { TimelineViewHandle } from './TimelineViewHandle'; // Import the handle type
 
-type ActualTimesType = (Parameters<typeof Day>[0] | { type: 'unscheduled' })[];
+export type ActualTimesType = (Parameters<typeof Day>[0] | { type: 'unscheduled' })[];
 
 export interface TimelineViewProps {
   times: ActualTimesType;

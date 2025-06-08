@@ -1,5 +1,6 @@
 import React from 'react';
-import { AppState, TaskProps, getters, setters } from '../app/store'; // Assuming paths are correct relative to this new file
+import { AppState, getters, setters } from '../app/store'; // Assuming paths are correct relative to this new file
+import { TaskProps } from '../types'; // Or possibly '../types/index'
 import { getHeading } from '../services/util';
 import Block from './Block';
 

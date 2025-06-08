@@ -2,7 +2,8 @@ import React from 'react';
 import { DraggableAttributes } from '@dnd-kit/core';
 import { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
 
-import { TaskProps, TaskPriorities } from '../types'; // Assuming common types are here
+import { TaskProps } from '../types'; // Or possibly '../types/index'
+import { TaskPriorities } from '../types/enums';
 import TaskTitle from './TaskTitle';
 import TaskDetails from './TaskDetails';
 // Logo and DateTime might be needed if TaskDetails props are more granular in future, but for now, they are encapsulated in TaskDetails
@@ -92,10 +93,10 @@ const TaskContent: React.FC<TaskContentProps> = (props) => {
           task={task}
           startISO={startISO}
           hasLengthDrag={hasLengthDrag}
-          dragging={mainTaskDragging} // Pass the main task's dragging state
+          dragging={mainTaskDragging || false} // Pass the main task's dragging state
           setLengthNodeRef={setLengthNodeRef}
           lengthAttributes={lengthAttributes}
-          lengthListeners={lengthListeners}
+          lengthListeners={lengthListeners || {}}
           setDeadlineNodeRef={setDeadlineNodeRef}
           deadlineAttributes={deadlineAttributes}
           deadlineListeners={deadlineListeners}

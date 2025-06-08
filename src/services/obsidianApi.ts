@@ -621,7 +621,7 @@ export default class ObsidianAPI extends Component {
     dropData: Partial<TaskProps>,
     completed = false
   ) {
-    const { position, filePath: fileName } = await this.findPosition(path)
+    const { position, filePath: fileName } = await this._findPosition(path) // Changed to _findPosition
 
     const defaultTask: TaskProps = {
       page: false,

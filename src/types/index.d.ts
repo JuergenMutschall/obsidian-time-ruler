@@ -59,7 +59,51 @@ declare global {
     completion?: string
     repeat?: string
   }
+} // Close declare global
 
+export type TaskProps = { // Moved TaskProps out and added export
+  type: 'task'
+  id: string
+  page: boolean
+  title: string
+  originalTitle: string
+  originalText: string
+  notes?: string
+  tags: string[]
+  children: string[]
+  position: STask['position']
+  path: string
+  parent?: string
+  extraFields?: Record<string, string>
+  duration?: { hour: number; minute: number }
+  status: string
+  blockReference?: string
+  fieldFormat: FieldFormat['main']
+  completed: boolean
+  query?: string
+  queryParent?: string
+  queryChildren?: string[]
+  links: string[]
+
+  // Obsidian Reminder
+  reminder?: string
+
+  // TASKS values, to be translated to emojis if setting is enabled
+  created?: string
+  start?: string
+  scheduled?: string
+  priority: number
+  due?: string
+  completion?: string
+  repeat?: string
+}
+
+// Re-open declare global if other types need to remain global and non-exported, or ensure all needed types are exported.
+// For now, assuming other types in declare global are fine as they are.
+// If DragData or DropData also need to be imported, they'd need similar treatment.
+// For this step, only focusing on TaskProps.
+
+declare global { // Re-opened for other types if necessary, or could be removed if all types are exported.
   type GoogleEvent = {
     id: string
     summary?: string
