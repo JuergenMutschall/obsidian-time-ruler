@@ -9,7 +9,7 @@ The `TaskTitle` component is responsible for rendering the title of a task. It i
 The component accepts the following props:
 
 *   **`title: string | undefined | null`**: The text content of the task's title. Can be `null` or `undefined` if no title is present.
-*   **`priority: TaskPriorities`**: An enum value (`TaskPriorities`) representing the priority of the task, which influences the title's color.
+*   **`priority: [TaskPriorities](../../types.md#taskpriorities)`**: An enum value (`[TaskPriorities](../../types.md#taskpriorities)`) representing the priority of the task, which influences the title's color.
 *   **`renderType?: 'deadline'`**: An optional string. If set to `'deadline'`, it might influence styling (though current implementation doesn't apply a specific class for it, it's considered in the color logic).
 *   **`isLink: boolean`**: A boolean flag. If `true`, it indicates the task is being rendered in a compact/link format, which applies `text-faint` styling.
 *   **`status: string`**: A string representing the task's status (e.g., 'x' for completed). If the status is 'x', `text-faint` styling is applied.
@@ -33,8 +33,8 @@ The component accepts the following props:
         *   `break-all` is used if any word in the title is longer than 20 characters, allowing breaks within long words.
         *   `break-words` is used otherwise.
     *   **Text Color**: The title's text color is conditionally applied:
-        *   `text-accent`: If `priority` is `TaskPriorities.HIGHEST`.
-        *   `text-faint`: If `priority` is `TaskPriorities.LOW`, or if `isLink` is `true`, or if `status` is `'x'` (completed/cancelled), or if the `title` is empty/null.
+        *   `text-accent`: If `priority` is `[TaskPriorities](../../types.md#taskpriorities).HIGHEST`.
+        *   `text-faint`: If `priority` is `[TaskPriorities](../../types.md#taskpriorities).LOW`, or if `isLink` is `true`, or if `status` is `'x'` (completed/cancelled), or if the `title` is empty/null.
         *   Default text color (often inherited): Applied if none of the above conditions for `text-accent` or `text-faint` are met (e.g., normal priority tasks).
     *   **Max Height**: The `maxHeight` style property is dynamically calculated as `calc(${lineHeightNormal}em * 2)`, effectively limiting the title's visible area to approximately two lines based on the provided normal line height. Overflowing text will be ellipsized due to `overflow-hidden text-ellipsis`.
 *   **Event Handling**:
@@ -52,8 +52,8 @@ The `TaskTitle` component is a stateless functional component. Its rendering and
 
 ## Interactions with Other Components and Services
 
-*   **Obsidian API (`getters.get('apis').obsidian!.app.workspace.openLinkText`)**: Interacts with the Obsidian application's API (via a getter from `../app/store`) to open notes or links when a parsed wikilink within the title is clicked.
-*   **`TaskPriorities` Enum (`../types/enums`)**: Uses this enum to determine styling based on task priority.
+*   **Obsidian API (`getters.get('apis').obsidian!.app.workspace.openLinkText`)**: Interacts with the Obsidian application's API (via a getter from `[../app/store](../../store.md)`) to open notes or links when a parsed wikilink within the title is clicked.
+*   **`[TaskPriorities](../../types.md#taskpriorities)` Enum (`[../types/enums](../../types.md#enums-and-mappings-from-srctypesenumsts)`)**: Uses this enum to determine styling based on task priority.
 
 ## Usage Example
 
@@ -66,7 +66,7 @@ import { TaskPriorities } from '../types/enums'; // Assuming TaskPriorities enum
 const Example1 = () => {
   const props: TaskTitleProps = {
     title: "Review the [[Project Plan]] document by EOD",
-    priority: TaskPriorities.NORMAL,
+    priority: [TaskPriorities](../../types.md#taskpriorities).NORMAL,
     isLink: false,
     status: " ", // Incomplete
     lineHeightNormal: "1.5",
@@ -80,7 +80,7 @@ const Example1 = () => {
 const Example2 = () => {
   const props: TaskTitleProps = {
     title: "URGENT: Fix deployment bug!",
-    priority: TaskPriorities.HIGHEST,
+    priority: [TaskPriorities](../../types.md#taskpriorities).HIGHEST,
     isLink: false,
     status: " ",
     lineHeightNormal: "1.5",
@@ -94,7 +94,7 @@ const Example2 = () => {
 const Example3 = () => {
   const props: TaskTitleProps = {
     title: "Archive old [[Client Emails]]",
-    priority: TaskPriorities.LOW,
+    priority: [TaskPriorities](../../types.md#taskpriorities).LOW,
     isLink: false,
     status: "x", // Completed
     lineHeightNormal: "1.6",
@@ -108,7 +108,7 @@ const Example3 = () => {
 const Example4 = () => {
   const props: TaskTitleProps = {
     title: "Quick link to [[Dashboard]]",
-    priority: TaskPriorities.NORMAL,
+    priority: [TaskPriorities](../../types.md#taskpriorities).NORMAL,
     isLink: true, // Rendered as a link
     status: " ",
     lineHeightNormal: "1.4",

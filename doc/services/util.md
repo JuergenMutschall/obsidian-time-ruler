@@ -19,8 +19,8 @@ The `util.ts` service is a collection of miscellaneous helper functions used acr
 
 *   **`parseFolderFromPath(path: string): string`**: Extracts the immediate parent folder name from a file path.
 *   **`parseFileFromPath(path: string): string`**: Cleans up a path string to get a canonical file path (removes #headings, >aliases, ::line numbers, ensures .md extension). Converts "Daily" to the actual daily note path.
-*   **`parsePathFromDate(date: string, dailyNoteInfo?: AppState['dailyNoteInfo']): string`**: Constructs a daily note file path for a given date string using format and folder settings.
-*   **`parseDateFromPath(path: string, dailyNoteInfo: AppState['dailyNoteInfo']): DateTime | false`**: Parses a date from a file path if it matches the daily note format; otherwise, returns `false`.
+*   **`parsePathFromDate(date: string, dailyNoteInfo?: [AppState](../../store.md#appstate-interface)['dailyNoteInfo']): string`**: Constructs a daily note file path for a given date string using format and folder settings.
+*   **`parseDateFromPath(path: string, dailyNoteInfo: [AppState](../../store.md#appstate-interface)['dailyNoteInfo']): DateTime | false`**: Parses a date from a file path if it matches the daily note format; otherwise, returns `false`.
 *   **`splitHeading(heading: string): [string, string]`**: Splits a string (typically a task path or group heading) into a container part and a title part, using '>', '#', or '/' as delimiters.
 *   **`convertSearchToRegExp(search: string): RegExp`**: Converts a search string into a regular expression where each character in the search string is separated by `.*?` (matches any characters lazily), making it a loose sequence match.
 
@@ -33,28 +33,28 @@ The `util.ts` service is a collection of miscellaneous helper functions used acr
 
 ### Task and Application-Specific Logic
 
-*   **`getEndISO({ tasks, events, startISO, endISO }: BlockProps): string`**: Calculates the effective end time of a `Block` by adding durations of its tasks and events to its `startISO`. Returns the maximum of this calculated time and the block's original `endISO`.
+*   **`getEndISO({ tasks, events, startISO, endISO }: [BlockProps](../../components/Block.md#props-blockcomponentprops)): string`**: Calculates the effective end time of a `Block` by adding durations of its tasks and events to its `startISO`. Returns the maximum of this calculated time and the block's original `endISO`.
 *   **`getTodayNote(): string`**: Returns the full path to today's daily note.
-*   **`getSubHeading(task: TaskProps, groupBy: AppState['settings']['groupBy'], hidePaths: string[]): string | typeof UNGROUPED`**: Determines the subheading for a task within a group, based on `groupBy` settings (e.g., extracts heading from `task.path` if not hidden).
+*   **`getSubHeading(task: [TaskProps](../../types.md#taskprops), groupBy: [AppState](../../store.md#appstate-interface)['settings']['groupBy'], hidePaths: string[]): string | typeof [UNGROUPED](../../components/Block.md#constants)`**: Determines the subheading for a task within a group, based on `groupBy` settings (e.g., extracts heading from `task.path` if not hidden).
 *   **`getHeading({ path, page, priority, tags }: ..., dailyNoteInfo: ..., groupBy: ..., hidePaths: ...): string`**: Calculates the primary grouping heading for a task based on `groupBy` setting (priority, tags, path, or hybrid). Handles daily notes specifically.
-*   **`getTasksByHeading(tasks: ..., dailyNoteInfo: ..., fileOrder: ..., groupBy: ...): [string, TaskProps[]][]`**: Groups tasks by headings (determined by `getHeading`) and sorts these groups according to `fileOrder`.
-*   **`isLengthType(type?: DragData['dragType']): boolean`**: Checks if a drag type is for 'task-length' or 'time'.
-*   **`removeNestedChildren(id: string, taskList: TaskProps[])`**: (Seems to have a bug, as it removes `child` from `taskList` but `child` is an iterator variable, not the actual element from the list directly. It should likely use an index or filter). Intended to remove children of a task from a list.
-*   **`parseTaskDate(task: TaskProps, tasks: AppState['tasks']): string | undefined`**: Determines the effective scheduled or completion date of a task, considering the scheduled dates of its parent tasks (parents with later dates "pull" children).
+*   **`getTasksByHeading(tasks: ..., dailyNoteInfo: ..., fileOrder: ..., groupBy: ...): [string, [TaskProps[]](../../types.md#taskprops)][]`**: Groups tasks by headings (determined by `getHeading`) and sorts these groups according to `fileOrder`.
+*   **`isLengthType(type?: [DragData](../../types.md#dragdata)['dragType']): boolean`**: Checks if a drag type is for 'task-length' or 'time'.
+*   **`removeNestedChildren(id: string, taskList: [TaskProps[]](../../types.md#taskprops))`**: (Seems to have a bug, as it removes `child` from `taskList` but `child` is an iterator variable, not the actual element from the list directly. It should likely use an index or filter). Intended to remove children of a task from a list.
+*   **`parseTaskDate(task: [TaskProps](../../types.md#taskprops), tasks: [AppState](../../store.md#appstate-interface)['tasks']): string | undefined`**: Determines the effective scheduled or completion date of a task, considering the scheduled dates of its parent tasks (parents with later dates "pull" children).
 *   **`isGreater(firstScheduled?: string, lastScheduled?: string): boolean`**: Compares two optional scheduled date strings.
-*   **`queryTasks(id: string, query: string, tasks: Record<string, TaskProps>): TaskProps[]`**: Filters a list of tasks based on a Dataview-like query string. Parses paths, tags, and field comparisons (e.g., `key > value`).
-*   **`getChildren(task: TaskProps, tasks: AppState['tasks']): string[]`**: Recursively gets all child IDs (including `queryChildren`) for a given task.
-*   **`getParents(task: TaskProps, tasks: AppState['tasks']): TaskProps[]`**: Recursively gets all parent tasks for a given task.
-*   **`getParentScheduled(task: TaskProps, tasks: AppState['tasks']): string | undefined`**: Finds the effective scheduled date of a task by traversing up its parent chain until a scheduled date is found.
+*   **`queryTasks(id: string, query: string, tasks: Record<string, [TaskProps](../../types.md#taskprops)>): [TaskProps[]](../../types.md#taskprops)`**: Filters a list of tasks based on a Dataview-like query string. Parses paths, tags, and field comparisons (e.g., `key > value`).
+*   **`getChildren(task: [TaskProps](../../types.md#taskprops), tasks: [AppState](../../store.md#appstate-interface)['tasks']): string[]`**: Recursively gets all child IDs (including `queryChildren`) for a given task.
+*   **`getParents(task: [TaskProps](../../types.md#taskprops), tasks: [AppState](../../store.md#appstate-interface)['tasks']): [TaskProps[]](../../types.md#taskprops)`**: Recursively gets all parent tasks for a given task.
+*   **`getParentScheduled(task: [TaskProps](../../types.md#taskprops), tasks: [AppState](../../store.md#appstate-interface)['tasks']): string | undefined`**: Finds the effective scheduled date of a task by traversing up its parent chain until a scheduled date is found.
 *   **`nestedScheduled(parentScheduled?: string, childScheduled?: string): boolean`**: Checks if a child's schedule is valid/allowed relative to its parent's schedule, considering "now" as a floor for future-dated items.
-*   **`hasPriority(task: TaskProps): boolean`**: Checks if a task has a non-default priority.
+*   **`hasPriority(task: [TaskProps](../../types.md#taskprops)): boolean`**: Checks if a task has a non-default priority.
 
 ## Data Types and Interfaces
 
 The file doesn't explicitly define many new types but uses and implies several from other parts of the application:
-*   `TaskProps` (from global types)
-*   `BlockProps`, `UNGROUPED` (from `src/components/Block.tsx`)
-*   `AppState`, `DragData` (from `src/app/store.ts`)
+*   `[TaskProps](../../types.md#taskprops)` (from global types)
+*   `[BlockProps](../../components/Block.md#props-blockcomponentprops)`, `[UNGROUPED](../../components/Block.md#constants)` (from `src/components/Block.tsx`)
+*   `[AppState](../../store.md#appstate-interface)`, `[DragData](../../types.md#dragdata)` (from `src/app/store.ts`)
 *   Types from `obsidian` (e.g., `Platform`)
 *   Types from `luxon` (`DateTime`, `Duration`)
 
@@ -62,9 +62,9 @@ The file doesn't explicitly define many new types but uses and implies several f
 
 *   **Luxon & Moment.js**: Used for date/time parsing and manipulation.
 *   **Obsidian API**: `Platform` is used.
-*   **`src/app/store.ts` (`getters`, `setters`, `useAppStore`, `useAppStoreRef`)**: Many functions interact with the global store, especially for settings and task data.
-*   **`src/components/Block.tsx`**: Imports `BlockProps` and `UNGROUPED`.
-*   **`src/types/enums.ts`**: Uses `TaskPriorities` and priority mappings.
+*   **[`src/app/store.ts`](../../store.md) ([`getters`](../../store.md#getters), [`setters`](../../store.md#setters-actions), `useAppStore`, `useAppStoreRef`)**: Many functions interact with the global store, especially for settings and task data.
+*   **[`src/components/Block.tsx`](../../components/Block.md)**: Imports `[BlockProps](../../components/Block.md#props-blockcomponentprops)` and `[UNGROUPED](../../components/Block.md#constants)`.
+*   **[`src/types/enums.ts`](../../types.md#enums-and-mappings-from-srctypesenumsts)**: Uses `TaskPriorities` and priority mappings.
 *   **DOM**: Some functions directly interact with `document` and `window` for caret manipulation and element queries.
 
 This utility service is a dense collection of helpers that are critical for the plugin's diverse operations, from basic data transformations to complex application logic.

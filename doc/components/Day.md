@@ -98,9 +98,9 @@ The `Day` component is responsible for rendering the entire view for a single da
     *   `Block`: Used to render all-day tasks, past tasks, upcoming tasks, and calendar events within the top section. The `Hours` component will also render `Block` components for timed items.
     *   `Button`: For collapse/expand and "focus on now" buttons.
     *   `Droppable`: Makes various parts of the day (header, "now" line, end of timeline) drop targets.
-    *   `Hours`: Renders the main timeline for tasks with specific times.
-    *   `Timer`: Displays the timer if `isNow` is true.
+    *   `[Hours](./Hours.md)`: Renders the main timeline for tasks with specific times.
+    *   `[Timer](./Timer.md)`: Displays the timer if `isNow` is true.
 *   **Parent Components**:
-    *   Likely rendered by a component that manages a list of days (e.g., `App.tsx` or a week/month view component).
+    *   Likely rendered by a component that manages a list of days (e.g., `[App.tsx](./App.md)` or a week/month view component).
 
 The `Day` component is a major hub for displaying and interacting with a day's agenda, combining data from various sources and responding to global state changes.

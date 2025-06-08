@@ -25,13 +25,13 @@ The `AppState` interface defines the shape of the global state managed by Zustan
 
 ```typescript
 export type AppState = {
-  tasks: Record<string, TaskProps>;
-  events: Record<string, EventProps>;
+  tasks: Record<string, [TaskProps](../types.md#taskprops)>;
+  events: Record<string, [EventProps](../types.md#eventprops)>;
   apis: {
-    obsidian?: ObsidianAPI;
-    calendar?: CalendarAPI;
+    obsidian?: [ObsidianAPI](../services/obsidianApi.md);
+    calendar?: [CalendarAPI](../services/calendarApi.md);
   };
-  dragData: DragData | null;
+  dragData: [DragData](../types.md#dragdata) | null;
   dragMode: 'ripple' | 'normal';
   findingTask: string | null;
   inScroll: number;
@@ -42,8 +42,8 @@ export type AppState = {
     template: string;
   };
   fileOrder: string[];
-  newTask: null | { task: Partial<TaskProps>; type: 'new' | 'move' };
-  settings: Pick<TimeRulerPlugin['settings'],
+  newTask: null | { task: Partial<[TaskProps](../types.md#taskprops)>; type: 'new' | 'move' };
+  settings: Pick<[TimeRulerPlugin['settings']](../types.md#timerulersettings),
     | 'dayStartEnd' | 'groupBy' | 'muted' // ... and other settings
   >;
   collapsed: Record<string, boolean>;
@@ -63,15 +63,15 @@ export type AppState = {
 
 ### Key State Slices and Their Purpose:
 
--   **`tasks: Record<string, TaskProps>`**:
+-   **`tasks: Record<string, [TaskProps](../types.md#taskprops)>`**:
     *   Stores all loaded tasks from the vault, indexed by their unique ID (typically `filePath::lineNumber` or a custom ID for page tasks).
-    *   `TaskProps` contains all information about a task (title, scheduled time, duration, completion status, etc.).
--   **`events: Record<string, EventProps>`**:
+    *   `[TaskProps](../types.md#taskprops)` contains all information about a task (title, scheduled time, duration, completion status, etc.).
+-   **`events: Record<string, [EventProps](../types.md#eventprops)>`**:
     *   Stores all calendar events fetched from iCalendar feeds, indexed by event ID.
-    *   `EventProps` contains details like summary, start/end times, and associated calendar.
--   **`apis: { obsidian?: ObsidianAPI; calendar?: CalendarAPI }`**:
-    *   Holds instances of the core API services (`ObsidianAPI` for vault interactions, `CalendarAPI` for calendar fetching). These are initialized in `TimeRulerView` and set here.
--   **`dragData: DragData | null`**:
+    *   `[EventProps](../types.md#eventprops)` contains details like summary, start/end times, and associated calendar.
+-   **`apis: { obsidian?: [ObsidianAPI](../services/obsidianApi.md); calendar?: [CalendarAPI](../services/calendarApi.md) }`**:
+    *   Holds instances of the core API services (`[ObsidianAPI](../services/obsidianApi.md)` for vault interactions, `[CalendarAPI](../services/calendarApi.md)` for calendar fetching). These are initialized in `TimeRulerView` and set here.
+-   **`dragData: [DragData](../types.md#dragdata) | null`**:
     *   Contains information about the item currently being dragged in the UI (e.g., a task, a block, a new task button). Includes `dragType` and the data of the dragged item.
     *   Set to `null` when no drag operation is active.
 -   **`dragMode: 'ripple' | 'normal'`**:
@@ -86,13 +86,13 @@ export type AppState = {
     *   Stores Obsidian's daily note configuration (date format, folder path, template path), which is used when creating tasks in daily notes.
 -   **`fileOrder: string[]`**:
     *   An array of file paths or unique identifiers representing the user-defined order of files/sections in the Time Ruler view.
--   **`newTask: null | { task: Partial<TaskProps>; type: 'new' | 'move' }`**:
+-   **`newTask: null | { task: Partial<[TaskProps](../types.md#taskprops)>; type: 'new' | 'move' }`**:
     *   Holds temporary data for a task being created or moved.
     *   `task`: Contains partial properties of the new task.
     *   `type`: Indicates if it's a 'new' task or an existing task being 'move'd (though 'move' type might be conceptual here).
     *   Used to control the display and pre-fill data in the new task modal.
--   **`settings: Pick<TimeRulerPlugin['settings'], ...>`**:
-    *   A subset of the main `TimeRulerSettings` from `src/main.ts`. This slice contains settings that directly affect the React UI and its behavior, allowing components to reactively update when these settings change.
+-   **`settings: Pick<[TimeRulerPlugin['settings']](../types.md#timerulersettings), ...>`**:
+    *   A subset of the main `[TimeRulerSettings](../types.md#timerulersettings)` from `src/main.ts`. This slice contains settings that directly affect the React UI and its behavior, allowing components to reactively update when these settings change.
 -   **`collapsed: Record<string, boolean>`**:
     *   Stores the collapsed/expanded state of various UI elements (e.g., groups, sections), indexed by a unique identifier for that element. `true` if collapsed, `false` if expanded.
 -   **`showingPastDates: boolean`**:
@@ -128,21 +128,21 @@ export const setters = {
     *   Uses the `modify` helper, which wraps `useAppStore.setState` with `produce` for immutability.
     *   Example: `setters.set({ searchStatus: true })`
 
--   **`patchTasks(ids: string[], task: Partial<TaskProps>)`**:
+-   **`patchTasks(ids: string[], task: Partial<[TaskProps](../types.md#taskprops)>)`**:
     *   Updates one or more tasks specified by `ids` with the new properties in `task`.
-    *   It retrieves the `ObsidianAPI` instance using `getters.getObsidianAPI()`.
+    *   It retrieves the `[ObsidianAPI](../services/obsidianApi.md)` instance using `getters.getObsidianAPI()`.
     *   For each task ID, it merges the new data with the existing task data (`getters.getTask(id)`).
-    *   Handles a special case: if `task.scheduled` is `TaskActions.DELETE`, it removes the `scheduled` property from the task.
+    *   Handles a special case: if `task.scheduled` is `[TaskActions](../types.md#taskactions).DELETE`, it removes the `scheduled` property from the task.
     *   Crucially, it calls `obsidianAPI.saveTask(savedTask)` for each modified task to persist the changes to the Markdown files.
     *   If `task.completion` is being set (i.e., a task is completed), it calls `obsidianAPI.playComplete()` to play a sound.
-    *   **Note**: This setter directly triggers side effects (saving to disk, playing sound) via the `ObsidianAPI`.
+    *   **Note**: This setter directly triggers side effects (saving to disk, playing sound) via the `[ObsidianAPI](../services/obsidianApi.md)`.
 
 -   **`patchCollapsed(ids: string[], collapsed: boolean)`**:
     *   Updates the `collapsed` state for multiple UI elements.
     *   Iterates through the provided `ids` and sets `state.collapsed[id] = collapsed`.
 
 -   **`updateFileOrder(file: string, beforeFile: string)`**:
-    *   Calls `obsidianAPI.updateFileOrder(file, beforeFile)` to persist changes to the user-defined file order. This setter delegates the actual state update of `fileOrder` to the `ObsidianAPI`'s internal logic, which would then likely call `setters.set` to update the store.
+    *   Calls `obsidianAPI.updateFileOrder(file, beforeFile)` to persist changes to the user-defined file order. This setter delegates the actual state update of `fileOrder` to the `[ObsidianAPI](../services/obsidianApi.md)`'s internal logic, which would then likely call `setters.set` to update the store.
 
 -   **`patchTimer(timer: Partial<AppState['timer']>)`**:
     *   Merges the provided partial timer state into the existing `state.timer` object.
@@ -162,8 +162,8 @@ export const getters = {
 
 -   **`getEvent(id: string)`**: Returns a specific calendar event by its ID from the `events` slice.
 -   **`getTask(id: string)`**: Returns a specific task by its ID from the `tasks` slice.
--   **`getObsidianAPI()`**: Returns the `ObsidianAPI` instance stored in `state.apis.obsidian`.
--   **`getCalendarAPI()`**: Returns the `CalendarAPI` instance stored in `state.apis.calendar`.
+-   **`getObsidianAPI()`**: Returns the `[ObsidianAPI](../services/obsidianApi.md)` instance stored in `state.apis.obsidian`.
+-   **`getCalendarAPI()`**: Returns the `[CalendarAPI](../services/calendarApi.md)` instance stored in `state.apis.calendar`.
 -   **`get<T extends keyof AppState>(key: T)`**: A generic getter to retrieve any top-level property from the state by its key.
 -   **`getApp()`**: Returns the Obsidian `App` object, accessed via `state.apis.obsidian!.app`.
 

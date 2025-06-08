@@ -101,7 +101,7 @@ type EventProps = {
 };
 ```
 
-### `BlockProps` (from `src/components/Block.tsx`)
+### `BlockProps` (from [`src/components/Block.tsx`](../components/Block.md#props-blockcomponentprops))
 
 Represents a block of time in the UI, which can contain tasks and events. This type is primarily used by UI components like `Day.tsx` and `Hours.tsx`. *(Definition inferred from usage, as it's defined in a component file but central to data flow).*
 
@@ -117,7 +117,7 @@ type BlockProps = {
   // ... other component-specific props like hidePaths, type, id, dragContainer, parentId
 };
 ```
-*Note: The actual `BlockComponentProps` in `Block.tsx` extends `BlockProps` with UI-specific details.*
+*Note: The actual `BlockComponentProps` in `[Block.tsx](../components/Block.md)` extends `BlockProps` with UI-specific details.*
 
 ## Drag and Drop Types
 

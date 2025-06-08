@@ -12,13 +12,13 @@ The service is structured as a class that extends Obsidian's `Component` class, 
 
 #### Constructor
 
-*   **`constructor(settings: TimeRulerPlugin['settings'], removeCalendar: (calendar: string) => void)`**:
+*   **`constructor(settings: [TimeRulerPlugin['settings']](../../types.md#timerulersettings), removeCalendar: (calendar: string) => void)`**:
     *   `settings`: The Time Ruler plugin's settings object, which contains the list of calendar URLs (`settings.calendars`).
     *   `removeCalendar`: A callback function (though not used in the provided `loadEvents` method snippet) likely intended for removing a calendar URL if it's invalid or causes issues.
 
 #### Properties
 
-*   **`settings: TimeRulerPlugin['settings']`**: Stores the plugin settings.
+*   **`settings: [TimeRulerPlugin['settings']](../../types.md#timerulersettings)`**: Stores the plugin settings.
 *   **`removeCalendar: (calendar: string) => void`**: Stores the callback for removing calendars.
 
 ## Public API
@@ -35,7 +35,7 @@ The primary public method of this class is:
     *   Initially checks `window.navigator.onLine`. If offline, it logs a warning and returns, preventing further processing.
 
 2.  **Date Bounding**:
-    *   Determines `dateBounds` (a start and end `DateTime`) based on `searchWithinWeeks` and `showingPastDates` from the global store (`getters.get()`). This range is used to filter which instances of recurring events are generated.
+    *   Determines `dateBounds` (a start and end `DateTime`) based on `searchWithinWeeks` and `showingPastDates` from the global store ([`getters.get()`](../../store.md#getters)). This range is used to filter which instances of recurring events are generated.
 
 3.  **Fetching and Parsing Calendars**:
     *   Iterates through each calendar URL in `this.settings.calendars`.
@@ -57,12 +57,12 @@ The primary public method of this class is:
                 *   Checks for recurrence exceptions (`event.exdate[dateLookupKey]`). If found, skips this occurrence.
                 *   Otherwise, uses the base event details and the generated `date` for the occurrence's start, calculating the end based on `duration`.
                 *   Formats `startISO` and `endISO` (as full ISO strings or ISO dates if `event.start['dateOnly']` is true).
-                *   Creates an `EventProps` object and adds it to the local `events` collection.
+                *   Creates an `[EventProps](../../types.md#eventprops)` object and adds it to the local `events` collection.
     *   **Single (Non-Recurring) Events**:
         *   If the event does not have an RRule:
             *   Checks if the event's `end` time is before `dateBounds[0]` or `start` time is after `dateBounds[1]`. If so, skips the event.
             *   Formats `startISO` and `endISO`.
-            *   Creates an `EventProps` object and adds it to the local `events` collection.
+            *   Creates an `[EventProps](../../types.md#eventprops)` object and adds it to the local `events` collection.
 
 5.  **Error Handling and Offline Notification**:
     *   Uses a `try...catch` block for each calendar fetch and parse operation.
@@ -70,11 +70,11 @@ The primary public method of this class is:
     *   If `offline` is true and `reportedOffline` (a module-level flag) is false, it shows an Obsidian `Notice` ("Time Ruler: calendars offline.") and sets `reportedOffline = true` to prevent repeated notices.
 
 6.  **Updating Global Store**:
-    *   After attempting to load all calendars (using `Promise.all(calendarLoads)`), it calls `setters.set({ events })` to update the application's global state with all the collected and processed events.
+    *   After attempting to load all calendars (using `Promise.all(calendarLoads)`), it calls [`setters.set({ events })`](../../store.md#setters-actions) to update the application's global state with all the collected and processed events.
 
 ## Data Types and Interfaces
 
-While not explicitly defined in this file, the code implies the existence of an `EventProps` interface/type, which likely includes:
+While not explicitly defined in this file, the code implies the existence of an `[EventProps](../../types.md#eventprops)` interface/type, which likely includes:
 
 *   `id: string`
 *   `title: string`

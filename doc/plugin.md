@@ -8,7 +8,7 @@ The main class `TimeRulerPlugin` extends `Plugin` from the `obsidian` API. It se
 
 ```typescript
 export default class TimeRulerPlugin extends Plugin {
-  settings: TimeRulerSettings;
+  settings: [TimeRulerSettings](../types.md#timerulersettings);
 
   constructor(app: App, manifest: any) {
     super(app, manifest);
@@ -20,14 +20,14 @@ export default class TimeRulerPlugin extends Plugin {
 ```
 
 Key responsibilities:
-- Managing plugin settings (`TimeRulerSettings`).
+- Managing plugin settings ([`TimeRulerSettings`](../types.md#timerulersettings)).
 - Setting up UI elements like views and settings tabs.
 - Registering commands for user interaction.
 - Handling plugin lifecycle events (`onload`, `onunload`).
 
 ## Plugin Settings
 
--   **`TimeRulerSettings` (Type):** Defines the structure for all settings used by the plugin. This includes calendar configurations, display preferences (like 24-hour format), task filtering options, etc.
+-   **[`TimeRulerSettings`](../types.md#timerulersettings) (Type):** Defines the structure for all settings used by the plugin. This includes calendar configurations, display preferences (like 24-hour format), task filtering options, etc.
 -   **`DEFAULT_SETTINGS` (Constant):** Provides the default values for all settings when the plugin is first loaded or when settings are reset.
 -   **`loadSettings()`:** An `async` method called during `onload`. It loads settings from Obsidian's storage using `this.loadData()` and merges them with `DEFAULT_SETTINGS`.
     ```typescript
@@ -35,7 +35,7 @@ Key responsibilities:
       this.settings = { ...DEFAULT_SETTINGS, ...(await this.loadData()) };
     }
     ```
--   **`saveSettings()`:** A method responsible for persisting the current state of `this.settings` to Obsidian's storage using `this.saveData()`. This method is also bound in the constructor and passed to child components like `SettingsTab` and `ObsidianAPI` to allow them to trigger settings persistence.
+-   **`saveSettings()`:** A method responsible for persisting the current state of `this.settings` to Obsidian's storage using `this.saveData()`. This method is also bound in the constructor and passed to child components like `SettingsTab` and `[ObsidianAPI](../services/obsidianApi.md)` to allow them to trigger settings persistence.
     ```typescript
     saveSettings() {
       this.saveData(this.settings);
@@ -138,7 +138,7 @@ This `async` method facilitates finding a task from the editor within the Time R
 This `async` method modifies a task's scheduled date directly from the editor context menu.
 - It constructs the task ID.
 - Determines the new `scheduled` ISO string based on the `modification` type (e.g., 'today', 'now').
-- Calls `setters.patchTasks([id], { scheduled })` to update the task in the store and persist it via `ObsidianAPI`.
+- Calls [`setters.patchTasks([id], { scheduled })`](../store.md#setters-actions) to update the task in the store and persist it via `[ObsidianAPI](../services/obsidianApi.md)`.
 
 ## Interaction with Obsidian API
 
@@ -160,6 +160,6 @@ The `TimeRulerPlugin` class and its methods extensively use the Obsidian API (`t
 -   **Icons:** `this.addRibbonIcon(...)`, `setIcon(...)` used in `openMenu`.
 -   **Menu:** `Menu` class for context menus.
 -   **Editor Context:** `MarkdownView`, `MarkdownFileInfo`, `editor.getCursor()`, `editor.getLine()`.
--   **Dataview Integration:** `getAPI(this.app)` from `'obsidian-dataview'` is used to interact with the Dataview plugin, primarily for task querying (though the direct query logic is in `ObsidianAPI`).
+-   **Dataview Integration:** `getAPI(this.app)` from `'obsidian-dataview'` is used to interact with the Dataview plugin, primarily for task querying (though the direct query logic is in `[ObsidianAPI](../services/obsidianApi.md)`).
 
-The plugin encapsulates most direct Obsidian API interactions related to its core setup and features within `src/main.ts`. Other services, like `ObsidianAPI` in `src/services/obsidianApi.ts`, handle more specific interactions like file system operations and detailed Dataview queries.
+The plugin encapsulates most direct Obsidian API interactions related to its core setup and features within `src/main.ts`. Other services, like `[ObsidianAPI](../services/obsidianApi.md)` in `src/services/obsidianApi.ts`, handle more specific interactions like file system operations and detailed Dataview queries.

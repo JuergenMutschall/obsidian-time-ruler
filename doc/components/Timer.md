@@ -97,13 +97,13 @@ The `Timer` component does not accept any direct props. Its behavior and initial
         *   If not `playing` and `currentTime <= 0`: Shows an `input` field for setting timer duration. Pressing 'Enter' calls `start()`.
         *   Otherwise: Displays the time in `H:MM:SS` format (hours shown if > 0). Prepends "-" if `negative`.
     *   **Buttons**:
-        *   Play/Pause `Button`.
-        *   If `playing`: "+5" and "-5" `Button`s to call `addTime(5)` and `addTime(-5)`.
-        *   If not `playing` and `currentTime > 0`: Reset `Button`.
+        *   Play/Pause `[Button](./Button.md)`.
+        *   If `playing`: "+5" and "-5" `[Button](./Button.md)`s to call `addTime(5)` and `addTime(-5)`.
+        *   If not `playing` and `currentTime > 0`: Reset `[Button](./Button.md)`.
 
 ## Interactions with Other Components and Services
 
-*   **`src/app/store.ts` (`setters`, `useAppStore`)**:
+*   **[`src/app/store.ts`](../../store.md) (`setters`, `useAppStore`)**:
     *   Reads `timer` state (`negative`, `startISO`, `maxSeconds`, `playing`).
     *   Reads `settings.muted` and `settings.borders`.
     *   Uses `setters.patchTimer` to update the global timer state.
@@ -112,8 +112,8 @@ The `Timer` component does not accept any direct props. Its behavior and initial
 *   **`react-timer-hook` (`useTimer`, `useStopwatch`)**:
     *   Core dependency for the underlying timer and stopwatch logic. The component acts as a UI and state synchronizer for these hooks.
 *   **Child Components**:
-    *   `Button`: Used for all interactive buttons (play/pause, +/-5 mins, reset).
+    *   `[Button](./Button.md)`: Used for all interactive buttons (play/pause, +/-5 mins, reset).
 *   **Parent Components**:
-    *   Likely rendered in a persistent part of the UI, such as `Day.tsx` when `isNow` is true, or a global application header/sidebar.
+    *   Likely rendered in a persistent part of the UI, such as `[Day.tsx](./Day.md)` when `isNow` is true, or a global application header/sidebar.
 
 The `Timer` component provides a feature-rich and well-integrated timing utility for users, leveraging `react-timer-hook` for robust core logic and `useAppStore` for persistent state across the plugin.

@@ -14,22 +14,22 @@ It encapsulates setup logic and side effects that need to occur at the applicati
 
 ## Props
 
-The component receives the following props, primarily from its parent `App.tsx`:
+The component receives the following props, primarily from its parent [`App.tsx`](./App.md):
 
 *   **`reload: () => Promise<void>`**:
-    *   A function (passed from `App.tsx`) that orchestrates the main data loading sequence (settings, daily note info, tasks, calendar events) into the Zustand store.
+    *   A function (passed from [`App.tsx`](./App.md)) that orchestrates the main data loading sequence (settings, daily note info, tasks, calendar events) into the Zustand store.
 *   **`weeksShownState: number`**:
-    *   The current number of weeks being displayed in the `TimelineView`.
+    *   The current number of weeks being displayed in the [`TimelineView`](./TimelineView.md).
 *   **`setWeeksShown: (weeks: number) => void`**:
-    *   A callback function (from `App.tsx`'s `useState`) to update the `weeksShownState`.
+    *   A callback function (from [`App.tsx`](./App.md)'s `useState`) to update the `weeksShownState`.
 *   **`showingPastDates: boolean`**:
     *   Indicates whether the timeline view is currently displaying past dates.
 *   **`searchWithinWeeks: [number, number]`**:
-    *   The current range of weeks (e.g., `[-1, 2]` for one week past, two weeks future) used by `ObsidianAPI` to load tasks.
+    *   The current range of weeks (e.g., `[-1, 2]` for one week past, two weeks future) used by `[ObsidianAPI](../../services/obsidianApi.md)` to load tasks.
 *   **`calendarMode: boolean`**:
-    *   `true` if the `TimelineView` is in a week/calendar layout, `false` otherwise (e.g., day or hour view).
-*   **`timelineViewRef: React.RefObject<TimelineViewHandle | undefined>`**:
-    *   A React ref pointing to the `TimelineView` component instance. This allows `AppInitializer` to call imperative methods on `TimelineView`, such as `scrollTo()`.
+    *   `true` if the [`TimelineView`](./TimelineView.md) is in a week/calendar layout, `false` otherwise (e.g., day or hour view).
+*   **`timelineViewRef: React.RefObject<[TimelineViewHandle](./TimelineViewHandle.md) | undefined>`**:
+    *   A React ref pointing to the [`TimelineView`](./TimelineView.md) component instance. This allows `AppInitializer` to call imperative methods on [`TimelineView`](./TimelineView.md), such as `scrollTo()`.
 
 ## Key Functionalities and `useEffect` Hooks
 
@@ -54,7 +54,7 @@ The component's logic is entirely contained within `useEffect` hooks, reflecting
 
 3.  **Initial Scroll to Today**:
     *   `useEffect(() => { /* ... */ }, [timelineViewRef]);`
-    *   **Action**: After a 1-second timeout (to allow `TimelineView`'s DOM to render), it checks if `timelineViewRef.current` exists. If so, it calls `timelineViewRef.current.scrollTo(getToday())`.
+    *   **Action**: After a 1-second timeout (to allow [`TimelineView`](./TimelineView.md)'s DOM to render), it checks if `timelineViewRef.current` exists. If so, it calls `timelineViewRef.current.scrollTo(getToday())`.
     *   **Purpose**: Ensures that when the Time Ruler is opened, the timeline view automatically scrolls to the current day's section, providing immediate context to the user.
 
 4.  **Adjust `weeksShownState` for Calendar Mode**:
@@ -64,12 +64,12 @@ The component's logic is entirely contained within `useEffect` hooks, reflecting
 
 5.  **Reload Tasks on Date Span Changes**:
     *   `useEffect(() => { getters.getObsidianAPI()?.loadTasks('', showingPastDates); }, [weeksShownState, showingPastDates]);`
-    *   **Action**: Calls `loadTasks` on the `ObsidianAPI` service whenever `weeksShownState` (number of weeks visible) or `showingPastDates` (toggle for past dates) changes.
+    *   **Action**: Calls `loadTasks` on the `[ObsidianAPI](../../services/obsidianApi.md)` service whenever `weeksShownState` (number of weeks visible) or `showingPastDates` (toggle for past dates) changes.
     *   **Purpose**: Refreshes the displayed tasks to match the new visible date range.
 
 6.  **Reload Tasks on `searchWithinWeeks` Changes**:
     *   `useEffect(() => { getters.getObsidianAPI()?.loadTasks('', showingPastDates); }, [searchWithinWeeks, showingPastDates]);`
-    *   **Action**: Calls `loadTasks` on the `ObsidianAPI` service whenever the `searchWithinWeeks` range (the actual window for task loading, which might be wider than just `weeksShownState`) changes.
+    *   **Action**: Calls `loadTasks` on the `[ObsidianAPI](../../services/obsidianApi.md)` service whenever the `searchWithinWeeks` range (the actual window for task loading, which might be wider than just `weeksShownState`) changes.
     *   **Purpose**: Ensures tasks are reloaded if the underlying search/load window is modified. This might seem redundant with the previous effect if `searchWithinWeeks` is only changed by `weeksShownState`, but allows for other potential modifiers of `searchWithinWeeks`.
 
 7.  **Synchronize `searchWithinWeeks` with `weeksShownState`**:
@@ -79,15 +79,15 @@ The component's logic is entirely contained within `useEffect` hooks, reflecting
 
 ## Interactions
 
-*   **Parent Component (`App.tsx`)**:
+*   **Parent Component ([`App.tsx`](./App.md))**:
     *   Receives critical functions (`reload`, `setWeeksShown`) and state (`weeksShownState`, `showingPastDates`, etc.) as props.
-*   **Zustand Store (`src/app/store.ts`)**:
+*   **Zustand Store ([`src/app/store.ts`](../../store.md))**:
     *   Reads timer state and settings using `getters`.
     *   Updates timer state and `searchWithinWeeks` using `setters`.
 *   **Services**:
-    *   Indirectly triggers `ObsidianAPI.loadTasks()` and `CalendarAPI.loadEvents()` via the `reload` prop.
+    *   Indirectly triggers `[ObsidianAPI](../../services/obsidianApi.md).loadTasks()` and `[CalendarAPI](../../services/calendarApi.md).loadEvents()` via the `reload` prop.
     *   Directly calls `getters.getObsidianAPI().loadTasks()` in response to date span changes.
-*   **`TimelineView` Component**:
+*   **[`TimelineView`](./TimelineView.md) Component**:
     *   Interacts via `timelineViewRef` to call its `scrollTo` method.
 *   **Obsidian API**:
     *   Uses `new Notice()` for timer completion notifications.

@@ -18,52 +18,52 @@ This class extends Obsidian's `Component` class.
 
 ### Properties
 
-*   **`loadedFiles: Record<string, TaskProps[]>`**: Seems intended to cache tasks by file, though not explicitly used in the provided snippet for caching.
+*   **`loadedFiles: Record<string, [TaskProps](../../types.md#taskprops)[]>`**: Seems intended to cache tasks by file, though not explicitly used in the provided snippet for caching.
 *   **`excludePaths?: RegExp`**: A RegExp compiled from Obsidian's global ignore filters to exclude certain paths.
 *   **`dailyNotePath: RegExp`**: (Not explicitly initialized in constructor but expected for daily note logic).
-*   **`settings: TimeRulerPlugin['settings']`**: Reference to plugin settings.
+*   **`settings: [TimeRulerPlugin['settings']](../../types.md#timerulersettings)`**: Reference to plugin settings.
 *   **`app: App`**: Reference to Obsidian `App`.
-*   **`setSetting: (settings: Partial<TimeRulerPlugin['settings']>) => void`**: Function to save settings.
+*   **`setSetting: (settings: Partial<[TimeRulerPlugin['settings']](../../types.md#timerulersettings)>) => void`**: Function to save settings.
 
 ### Methods
 
 #### Settings and Utilities
 
-*   **`getSetting<T extends keyof TimeRulerPlugin['settings']>(setting: T)`**: Retrieves a specific setting value.
+*   **`getSetting<T extends keyof [TimeRulerPlugin['settings']](../../types.md#timerulersettings)>(setting: T)`**: Retrieves a specific setting value.
 *   **`playComplete()`**: Plays a "pop" sound if not muted.
 *   **`reload()`**: Reloads `excludePaths` RegExp from Obsidian's config.
 
 #### Task Loading and Searching
 
-*   **`searchTasks(path: string, dailyNoteInfo: AppState['dailyNoteInfo'], completed: boolean, dateBounds: [string, string]): TaskProps[]`**:
+*   **`searchTasks(path: string, dailyNoteInfo: [AppState](../../store.md#appstate-interface)['dailyNoteInfo'], completed: boolean, dateBounds: [string, string]): [TaskProps[]](../../types.md#taskprops)`**:
     *   Performs a Dataview query (`dv.pages().file.tasks` and `dv.pages()`) based on the provided `path`, global plugin `settings.search`, completion status, custom status settings, date bounds, and exclusion paths.
     *   Applies an optional custom `settings.filterFunction` and `settings.taskSearch`.
-    *   Converts Dataview `STask` objects and pages to `TaskProps` using `textToTask` and `pageToTask`.
+    *   Converts Dataview `STask` objects and pages to `[TaskProps](../../types.md#taskprops)` using `textToTask` and `pageToTask`.
     *   Processes task children and parent relationships.
-    *   Returns an array of `TaskProps`.
+    *   Returns an array of `[TaskProps](../../types.md#taskprops)`.
 *   **`forgetTasks(path: string)`**: Removes tasks associated with a given file path from the global store. Used during file renames.
 *   **`loadTasks(path: string, completed: boolean)`**:
     *   Ensures Dataview index is initialized.
     *   Calculates `dateBounds` based on current view settings.
     *   Calls `searchTasks` and then `updateTasks` with the results.
-*   **`updateTasks(processedTasks: TaskProps[], path: string, completed: boolean)`**:
-    *   Updates the global task list (`getters.get('tasks')`) with `processedTasks`.
+*   **`updateTasks(processedTasks: [TaskProps[]](../../types.md#taskprops), path: string, completed: boolean)`**:
+    *   Updates the global task list ([`getters.get('tasks')`](../../store.md#getters)) with `processedTasks`.
     *   Adds newly found file paths to `settings.fileOrder` in sorted order.
     *   Removes tasks from the store that were in the given `path` but are no longer present in `processedTasks` (handles deletions).
     *   Updates existing tasks if they have changed.
     *   Re-evaluates task queries (`task.query`) and updates `queryChildren` and `queryParent` relationships.
-    *   Updates the global store via `setters.set({ tasks: updatedTasks, fileOrder: this.settings.fileOrder })`.
+    *   Updates the global store via [`setters.set({ tasks: updatedTasks, fileOrder: this.settings.fileOrder })`](../../store.md#setters-actions).
 
 #### File and Task Manipulation
 
 *   **`updateFileOrder(file: string, before: string)`**: Reorders `file` before `before` in `settings.fileOrder` and updates global state.
-*   **`async moveTask(task: TaskProps, selectedHeading: string)`**:
+*   **`async moveTask(task: [TaskProps](../../types.md#taskprops), selectedHeading: string)`**:
     *   Moves a task (and its subtasks from the file) from its original path/position to a new `selectedHeading` (which can be a file or file#heading).
     *   Reads the source file, removes the task lines.
     *   Finds the target position in the destination file (creating it if necessary) using `findPosition`.
     *   Inserts the task lines into the destination file.
     *   Calls `openTask` to navigate to the moved task.
-*   **`createNewTask(newTask: Partial<TaskProps>, selectedHeading: string | null, dailyNoteInfo: AppState['dailyNoteInfo'])`**:
+*   **`createNewTask(newTask: Partial<[TaskProps](../../types.md#taskprops)>, selectedHeading: string | null, dailyNoteInfo: [AppState](../../store.md#appstate-interface)['dailyNoteInfo'])`**:
     *   Determines the target path: if `selectedHeading` is "Daily" or null, uses the daily note path based on `newTask.scheduled` or today. Otherwise, uses `selectedHeading`.
     *   Calls `createTaskInPath`.
 *   **`async createFileFromPath(path: string): Promise<TFile>`**:
@@ -75,9 +75,9 @@ This class extends Obsidian's `Component` class.
     *   Considers `settings.addTaskToEnd` to place tasks at the end of a heading section or file.
     *   Handles frontmatter to place tasks after it.
     *   Returns the `position` (start and end line/col) and the actual `filePath`.
-*   **`private async createTaskInPath(path: string, dropData: Partial<TaskProps>, completed: boolean = false)`**:
+*   **`private async createTaskInPath(path: string, dropData: Partial<[TaskProps](../../types.md#taskprops)>, completed: boolean = false)`**:
     *   Uses `findPosition` to get the insertion point.
-    *   Creates a default `TaskProps` object, merging in `dropData`.
+    *   Creates a default `[TaskProps](../../types.md#taskprops)` object, merging in `dropData`.
     *   Calls `saveTask` to write it to the file.
     *   Opens the new task using `openTask`.
     *   Clears `newTask` data from the store.
@@ -88,7 +88,7 @@ This class extends Obsidian's `Component` class.
     *   Removes task lines from file content.
     *   Handles unsetting `queryParent` for tasks that were children of a deleted query task.
     *   Updates the global store.
-*   **`async saveTask(task: TaskProps, newTask?: boolean)`**:
+*   **`async saveTask(task: [TaskProps](../../types.md#taskprops), newTask?: boolean)`**:
     *   Saves a single task to its file.
     *   If `task.page` is true, updates frontmatter using `app.fileManager.processFrontMatter` and `taskToPage`.
     *   Otherwise, reads the file, and either inserts a new line (if `newTask`) or replaces the existing line for the task using `taskToText`.
@@ -105,10 +105,10 @@ This class extends Obsidian's `Component` class.
 
 ## Standalone Utility Functions
 
-*   **`async getDailyNoteInfo(): Promise<AppState['dailyNoteInfo'] | undefined>`**:
+*   **`async getDailyNoteInfo(): Promise<[AppState](../../store.md#appstate-interface)['dailyNoteInfo'] | undefined>`**:
     *   Reads Obsidian's daily notes configuration (`daily-notes` config file).
     *   Returns an object with `format`, `folder`, and `template` for daily notes. Provides defaults if config is missing.
-*   **`async openTask(task: TaskProps)`**:
+*   **`async openTask(task: [TaskProps](../../types.md#taskprops))`**:
     *   Opens the task's file using `app.workspace.openLinkText`.
     *   Sets the cursor position to the end of the task in the editor.
     *   Focuses the editor.
@@ -122,15 +122,15 @@ This class extends Obsidian's `Component` class.
 
 ## Data Types and Interfaces
 
-The service makes extensive use of `TaskProps` (properties of a task) and interacts with Dataview's `STask` and page objects. It also uses an internal `IPosition` like interface for text positions. Many settings types from `TimeRulerPlugin['settings']` and state types from `AppState` are also referenced.
+The service makes extensive use of `[TaskProps](../../types.md#taskprops)` (properties of a task) and interacts with Dataview's `STask` and page objects. It also uses an internal `IPosition` like interface for text positions. Many settings types from `[TimeRulerPlugin['settings']](../../types.md#timerulersettings)` and state types from `[AppState](../../store.md#appstate-interface)` are also referenced.
 
 ## Interactions
 
 *   **Obsidian App**: Core interactions for file reading/writing (`app.vault`, `app.fileManager`), opening links, editor manipulation, settings.
 *   **Dataview Plugin**: Essential for `searchTasks` via the `dv` API object.
-*   **Global Store (`getters`, `setters`)**: Central to its operation for reading current state and dispatching updates (tasks, file order, UI flags).
-*   **`parser.ts`**: Uses `pageToTask`, `taskToPage`, `taskToText`, `textToTask`, `getProperty`.
-*   **`util.ts`**: Uses many utility functions like `getHeading`, `getParentScheduled`, `getParents`, `parseDateFromPath`, `parseFileFromPath`, `parsePathFromDate`, `parseTaskDate`, `queryTasks`, `scrollToSection`, `toISO`, `splitHeading`.
+*   **Global Store ([`getters`](../../store.md#getters), [`setters`](../../store.md#setters-actions))**: Central to its operation for reading current state and dispatching updates (tasks, file order, UI flags).
+*   **[`parser.ts`](./parser.md)**: Uses `pageToTask`, `taskToPage`, `taskToText`, `textToTask`, `getProperty`.
+*   **[`util.ts`](./util.md)**: Uses many utility functions like `getHeading`, `getParentScheduled`, `getParents`, `parseDateFromPath`, `parseFileFromPath`, `parsePathFromDate`, `parseTaskDate`, `queryTasks`, `scrollToSection`, `toISO`, `splitHeading`.
 *   **`sounds` (from `assets.ts`)**: For playing completion sounds.
 
 This service is the main bridge between the plugin's logic/UI and the Obsidian environment, handling most data persistence and retrieval related to tasks.

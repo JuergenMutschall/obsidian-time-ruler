@@ -2,21 +2,21 @@
 
 ## Purpose
 
-The `TaskSubtaskList` component is responsible for rendering the list of subtasks associated with a parent task. It provides a visual control to collapse or expand this list and utilizes the `Block` component to display the actual subtasks when expanded.
+The `TaskSubtaskList` component is responsible for rendering the list of subtasks associated with a parent task. It provides a visual control to collapse or expand this list and utilizes the `[Block](./Block.md)` component to display the actual subtasks when expanded.
 
 ## Props
 
 The component accepts the following props:
 
 *   **`taskId: string`**: The unique identifier of the parent task.
-*   **`task: TaskProps`**: The parent task object itself. This is used by the `getHeading` utility function to determine path information for hiding redundant parent paths in subtask rendering.
-*   **`subtasks: TaskProps[] | undefined`**: An array of `TaskProps` objects representing the subtasks. This list is expected to be already filtered and processed by the parent component.
+*   **`task: [TaskProps](../../types.md#taskprops)`**: The parent task object itself. This is used by the `getHeading` utility function to determine path information for hiding redundant parent paths in subtask rendering.
+*   **`subtasks: [TaskProps[]](../../types.md#taskprops) | undefined`**: An array of `[TaskProps](../../types.md#taskprops)` objects representing the subtasks. This list is expected to be already filtered and processed by the parent component.
 *   **`collapsed: boolean`**: A boolean state indicating whether the subtask list is currently collapsed (`true`) or expanded (`false`).
 *   **`onToggleCollapse: () => void`**: A callback function that is invoked when the user clicks the collapse/expand control.
-*   **`dragContainer: string`**: A string identifier for the drag container context, passed down to the child `Block` component and further qualified with the `taskId`.
-*   **`startISO?: string`**: An optional ISO date string, typically representing the current view's start date, passed to the child `Block` component.
-*   **`dailyNoteInfo: AppState['dailyNoteInfo']`**: Information related to daily notes, used by the `getHeading` utility function.
-*   **`groupBy: AppState['settings']['groupBy']`**: The current grouping setting from application state, used by the `getHeading` utility function.
+*   **`dragContainer: string`**: A string identifier for the drag container context, passed down to the child `[Block](./Block.md)` component and further qualified with the `taskId`.
+*   **`startISO?: string`**: An optional ISO date string, typically representing the current view's start date, passed to the child `[Block](./Block.md)` component.
+*   **`dailyNoteInfo: [AppState](../../store.md#appstate-interface)['dailyNoteInfo']`**: Information related to daily notes, used by the `getHeading` utility function.
+*   **`groupBy: [AppState](../../store.md#appstate-interface)['settings']['groupBy']`**: The current grouping setting from application state, used by the `getHeading` utility function.
 
 ## Functionality
 
@@ -29,8 +29,8 @@ The component accepts the following props:
     *   This control has styling that changes its padding based on the `collapsed` state (`pl-indent pr-2` when collapsed, `pl-[8px] py-2` when expanded).
     *   Clicking this control triggers the `onToggleCollapse` callback function.
 *   **Subtask Display**:
-    *   If `collapsed` is `false` and `subtasks` exist and are not empty, the component renders a `Block` component to display the list of subtasks.
-    *   The `Block` component is configured with the following specific props:
+    *   If `collapsed` is `false` and `subtasks` exist and are not empty, the component renders a `[Block](./Block.md)` component to display the list of subtasks.
+    *   The `[Block](./Block.md)` component is configured with the following specific props:
         *   `type='child'`: Indicates that this block represents child tasks.
         *   `dragContainer`: Set to `${dragContainer}::${taskId}`, creating a unique drag context for the subtasks of this parent.
         *   `hidePaths`: An array of strings, `[getHeading(task, dailyNoteInfo, groupBy), task.path]`. This is used to prevent the redundant display of the parent task's own heading or path within the subtask entries.
@@ -46,10 +46,10 @@ The `TaskSubtaskList` component itself is a stateless functional component. Howe
 
 ## Interactions with Other Components and Services
 
-*   **`Block` Component (`./Block.tsx`)**: This is a crucial interaction. `TaskSubtaskList` uses the `Block` component to render the actual list of subtasks when the list is expanded.
-*   **`getHeading` Utility Function (`../services/util`)**: This function is used to determine the heading or path of the parent task, which is then used in the `hidePaths` prop of the `Block` component to avoid redundancy.
-*   **`TaskProps` Type (`../types`)**: Defines the structure for `task` objects and elements within the `subtasks` array.
-*   **`AppState` Type (`../app/store`)**: Parts of the `AppState` (specifically `dailyNoteInfo` and `settings.groupBy`) are consumed via props to be used by `getHeading`.
+*   **`[Block](./Block.md)` Component (`./Block.tsx`)**: This is a crucial interaction. `TaskSubtaskList` uses the `[Block](./Block.md)` component to render the actual list of subtasks when the list is expanded.
+*   **`getHeading` Utility Function (`../services/util`)**: This function is used to determine the heading or path of the parent task, which is then used in the `hidePaths` prop of the `[Block](./Block.md)` component to avoid redundancy.
+*   **`[TaskProps](../../types.md#taskprops)` Type (`../types`)**: Defines the structure for `task` objects and elements within the `subtasks` array.
+*   **`[AppState](../../store.md#appstate-interface)` Type (`../app/store`)**: Parts of the `[AppState](../../store.md#appstate-interface)` (specifically `dailyNoteInfo` and `settings.groupBy`) are consumed via props to be used by `getHeading`.
 
 ## Usage Example
 
@@ -61,7 +61,7 @@ import { AppState } from '../app/store'; // Assuming AppState type
 import { GroupByOption } from '../types/enums'; // For groupBy
 
 // Conceptual parent component (e.g., a TaskItem)
-const MyParentTask = ({ task, allSubtasks, initialCollapsed = true, appState }: { task: TaskProps, allSubtasks: TaskProps[], initialCollapsed?: boolean, appState: AppState }) => {
+const MyParentTask = ({ task, allSubtasks, initialCollapsed = true, appState }: { task: [TaskProps](../../types.md#taskprops), allSubtasks: [TaskProps[]](../../types.md#taskprops), initialCollapsed?: boolean, appState: [AppState](../../store.md#appstate-interface) }) => {
   const [collapsed, setCollapsed] = useState(initialCollapsed);
 
   const relevantSubtasks = allSubtasks.filter(sub => sub.parentId === task.id); // Example filtering
@@ -99,14 +99,14 @@ const MyParentTask = ({ task, allSubtasks, initialCollapsed = true, appState }: 
 };
 
 // Example Data
-const parentTaskData: TaskProps = { id: 'parent1', title: 'Main Project Task', path: 'project/main', /* ...other props */ };
-const subtaskData: TaskProps[] = [
+const parentTaskData: [TaskProps](../../types.md#taskprops) = { id: 'parent1', title: 'Main Project Task', path: 'project/main', /* ...other props */ };
+const subtaskData: [TaskProps[]](../../types.md#taskprops) = [
   { id: 'sub1', parentId: 'parent1', title: 'Subtask A', path: 'project/main/subA', /* ...other props */ },
   { id: 'sub2', parentId: 'parent1', title: 'Subtask B', path: 'project/main/subB', /* ...other props */ },
 ];
-const exampleAppState: AppState = { // Simplified AppState for example
+const exampleAppState: [AppState](../../store.md#appstate-interface) = { // Simplified AppState for example
   dailyNoteInfo: { /* ... */ },
-  settings: { groupBy: GroupByOption.Default, /* ...other settings */ },
+  settings: { groupBy: [GroupByOption](../../types.md#enums-and-mappings-from-srctypesenumsts).Default, /* ...other settings */ },
   // ... other app state parts
 };
 

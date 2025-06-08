@@ -23,9 +23,9 @@ The service defines several important regular expressions to detect and extract 
 
 ## Public API
 
-### `textToTask(item: any, dailyNoteInfo: AppState['dailyNoteInfo'], defaultFormat: FieldFormat['main']): TaskProps`
+### `textToTask(item: any, dailyNoteInfo: [AppState](../../store.md#appstate-interface)['dailyNoteInfo'], defaultFormat: [FieldFormat](../../types.md#fieldformat)['main']): [TaskProps](../../types.md#taskprops)`
 
-*   **Purpose**: Converts a Dataview `STask` object (passed as `item`) into a `TaskProps` object.
+*   **Purpose**: Converts a Dataview `STask` object (passed as `item`) into a `[TaskProps](../../types.md#taskprops)` object.
 *   **Functionality**:
     *   Detects the primary field format (`mainFormat`) of the task text using `detectFieldFormat`.
     *   Extracts the `originalTitle` by removing various metadata patterns (emojis, inline fields, dates, priorities based on `mainFormat`).
@@ -40,31 +40,31 @@ The service defines several important regular expressions to detect and extract 
         *   `repeat`: Parses from `item.repeat` or Tasks emoji pattern.
         *   `query`: Parses `item.query`, ensuring it's quoted if it doesn't look like a complex query.
     *   Filters `tags` to exclude those found within `[[wikilinks]]`.
-    *   Populates other `TaskProps` fields like `page: false`, `children`, `status`, `path`, `position`, `completed`, `links`, etc.
-*   **Returns**: A `TaskProps` object.
+    *   Populates other `[TaskProps](../../types.md#taskprops)` fields like `page: false`, `children`, `status`, `path`, `position`, `completed`, `links`, etc.
+*   **Returns**: A `[TaskProps](../../types.md#taskprops)` object.
 
-### `pageToTask(item: Record<string, Literal> & { file: PageMetadata }, defaultFieldFormat: FieldFormat['main']): TaskProps`
+### `pageToTask(item: Record<string, Literal> & { file: PageMetadata }, defaultFieldFormat: [FieldFormat](../../types.md#fieldformat)['main']): [TaskProps](../../types.md#taskprops)`
 
-*   **Purpose**: Converts Dataview page metadata (for tasks represented by whole pages) into a `TaskProps` object.
+*   **Purpose**: Converts Dataview page metadata (for tasks represented by whole pages) into a `[TaskProps](../../types.md#taskprops)` object.
 *   **Functionality**:
     *   Extracts properties like `scheduled`, `length`/`duration`, `due`, `reminder`, `completed`, `completion`, `priority`, `repeat`, `start`, `created`, `query` directly from the page's frontmatter fields (using helper `testDateTime` and `testDuration`).
     *   Handles "Full Calendar" specific fields like `allDay`, `date`, `startTime`, `endTime` to derive `scheduled` and `length`.
     *   Sets `page: true`.
     *   `id` is the file path. `title` is the file name.
-*   **Returns**: A `TaskProps` object.
+*   **Returns**: A `[TaskProps](../../types.md#taskprops)` object.
 
-### `detectFieldFormat(text: string, defaultFormat: FieldFormat['main']): FieldFormat`
+### `detectFieldFormat(text: string, defaultFormat: [FieldFormat](../../types.md#fieldformat)['main']): [FieldFormat](../../types.md#fieldformat)`
 
 *   **Purpose**: Analyzes a task's text line to determine the primary metadata format used.
 *   **Functionality**:
     *   `parseMain()`: Checks for patterns of "simple", "tasks" (emojis), "kanban", "full-calendar" (specific inline fields like `[allDay::]`), or "dataview" (`[scheduled::]`). Returns `defaultFormat` if none match.
     *   `parseReminder()`: Detects if reminder uses "tasks" emoji or "native" `(@...)` format.
     *   `parseScheduled()`: Detects if scheduled date uses "kanban" format.
-*   **Returns**: A `FieldFormat` object: `{ main: FieldFormat['main'], reminder: FieldFormat['reminder'], scheduled: FieldFormat['scheduled'] }`.
+*   **Returns**: A `[FieldFormat](../../types.md#fieldformat)` object: `{ main: [FieldFormat](../../types.md#fieldformat)['main'], reminder: [FieldFormat](../../types.md#fieldformat)['reminder'], scheduled: [FieldFormat](../../types.md#fieldformat)['scheduled'] }`.
 
-### `taskToText(task: TaskProps, defaultFieldFormat: FieldFormat['main']): string`
+### `taskToText(task: [TaskProps](../../types.md#taskprops), defaultFieldFormat: [FieldFormat](../../types.md#fieldformat)['main']): string`
 
-*   **Purpose**: Converts a `TaskProps` object back into its textual Markdown representation.
+*   **Purpose**: Converts a `[TaskProps](../../types.md#taskprops)` object back into its textual Markdown representation.
 *   **Functionality**:
     *   Starts with the basic task structure: `- [status] originalTitle tags`.
     *   Appends extra Dataview fields (`task.extraFields`).
@@ -74,9 +74,9 @@ The service defines several important regular expressions to detect and extract 
     *   Appends `task.blockReference` if present.
 *   **Returns**: A string representing the task line.
 
-### `taskToPage(task: TaskProps, frontmatter: Record<string, any>)`
+### `taskToPage(task: [TaskProps](../../types.md#taskprops), frontmatter: Record<string, any>)`
 
-*   **Purpose**: Updates a frontmatter object with properties from a `TaskProps` object, for tasks represented by pages.
+*   **Purpose**: Updates a frontmatter object with properties from a `[TaskProps](../../types.md#taskprops)` object, for tasks represented by pages.
 *   **Functionality**:
     *   If `task.fieldFormat === 'full-calendar'`, sets `allDay`, `date`, `startTime`, `endTime` based on `task.scheduled` and `task.duration`.
     *   Otherwise, sets `scheduled` and `length` directly.
@@ -93,15 +93,15 @@ The service defines several important regular expressions to detect and extract 
 
 ## Data Types and Interfaces
 
-*   **`TaskProps`**: The central internal data structure for tasks. While not defined in this file, it's heavily used and includes fields like `id`, `title`, `originalTitle`, `originalText`, `scheduled`, `due`, `priority`, `duration`, `completed`, `status`, `tags`, `notes`, `path`, `position`, `children`, `page`, `fieldFormat`, etc.
-*   **`FieldFormat`**: An interface `{ main: 'simple' | 'tasks' | 'kanban' | 'dataview' | 'full-calendar', reminder: 'tasks' | 'native' | 'kanban', scheduled: 'kanban' | 'default' }` describing the detected metadata syntaxes.
+*   **`[TaskProps](../../types.md#taskprops)`**: The central internal data structure for tasks. While not defined in this file, it's heavily used and includes fields like `id`, `title`, `originalTitle`, `originalText`, `scheduled`, `due`, `priority`, `duration`, `completed`, `status`, `tags`, `notes`, `path`, `position`, `children`, `page`, `fieldFormat`, etc.
+*   **`[FieldFormat](../../types.md#fieldformat)`**: An interface `{ main: 'simple' | 'tasks' | 'kanban' | 'dataview' | 'full-calendar', reminder: 'tasks' | 'native' | 'kanban', scheduled: 'kanban' | 'default' }` describing the detected metadata syntaxes.
 *   Relies on Dataview types: `STask`, `Literal`, `PageMetadata`.
 *   Relies on Luxon types: `DateTime`, `Duration`.
 
 ## Interactions
 
-*   **`src/app/store.ts` (`getters`)**: Used by `taskToText` to get `dailyNoteInfo`.
-*   **`src/types/enums.ts`**: Uses various enums and mappings like `RESERVED_FIELDS`, `TaskPriorities`, `TasksEmojiToKey`, `keyToTasksEmoji`, `priorityKeyToNumber`, `priorityNumberToKey`, `priorityNumberToSimplePriority`, `simplePriorityToNumber`.
-*   **`src/services/util.ts`**: Uses utility functions like `hasPriority`, `isDateISO`, `parseDateFromPath`, `parseFileFromPath`, `toISO`.
+*   **[`src/app/store.ts`](../../store.md) ([`getters`](../../store.md#getters))**: Used by `taskToText` to get `dailyNoteInfo`.
+*   **[`src/types/enums.ts`](../../types.md#enums-and-mappings-from-srctypesenumsts)**: Uses various enums and mappings like `RESERVED_FIELDS`, `TaskPriorities`, `TasksEmojiToKey`, `keyToTasksEmoji`, `priorityKeyToNumber`, `priorityNumberToKey`, `priorityNumberToSimplePriority`, `simplePriorityToNumber`.
+*   **[`src/services/util.ts`](./util.md)**: Uses utility functions like `hasPriority`, `isDateISO`, `parseDateFromPath`, `parseFileFromPath`, `toISO`.
 
 This service is fundamental for interoperability, allowing Time Ruler to understand and modify task data written in different common Obsidian styles. Its accuracy in parsing and formatting is key to reliable plugin behavior.

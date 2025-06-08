@@ -9,14 +9,14 @@ The `autoScroll.ts` service provides a React hook, `useAutoScroll`, designed to 
 The service exports a single React hook:
 
 *   **`useAutoScroll()`**:
-    *   This hook should be called within a React component that is part of the Time Ruler's UI (likely a high-level component like `App.tsx` where drag operations are managed).
+    *   This hook should be called within a React component that is part of the Time Ruler's UI (likely a high-level component like `[App.tsx](../../components/App.md)` where drag operations are managed).
     *   It doesn't take any arguments.
     *   It doesn't return any direct values but sets up event listeners to manage the auto-scrolling behavior.
 
 ## Functionality
 
 1.  **State and Refs**:
-    *   `dragging`: Subscribes to `state.dragData` from `useAppStore`. The auto-scroll behavior is only active when `dragging` is true (i.e., a dnd-kit drag operation is in progress).
+    *   `dragging`: Subscribes to `state.dragData` (from [`DragData`](../../types.md#dragdata)) from [`useAppStore`](../../store.md). The auto-scroll behavior is only active when `dragging` is true (i.e., a dnd-kit drag operation is in progress).
     *   `scrolling`: A `useRef<boolean>(false)` to track if an auto-scroll animation is currently active. This prevents multiple scroll commands from firing simultaneously.
     *   `timeout`: A `useRef<number | null>(null)` to store the ID of a `setTimeout` call. This is used to delay the initiation of scrolling until the cursor has hovered near an edge for a specified duration (`WAIT_TIME`).
     *   `WAIT_TIME`: A constant set to `500` (milliseconds). This is the delay before auto-scrolling starts when the cursor is near an edge.
@@ -58,7 +58,7 @@ The service does not explicitly define or export new data types or interfaces. I
 The `useAutoScroll` hook should be invoked in a component that is active during drag-and-drop operations, typically the main application component where `@dnd-kit`'s `DndContext` is set up.
 
 ```tsx
-// Example in App.tsx or a similar top-level component
+// Example in [App.tsx](../../components/App.md) or a similar top-level component
 import { useAutoScroll } from 'src/services/autoScroll';
 
 export default function App({ apis }) {

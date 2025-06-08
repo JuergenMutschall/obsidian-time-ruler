@@ -13,13 +13,13 @@ The component accepts the following props:
 *   **`setWeeksShown: (weeks: number) => void`**: A callback function to update the `weeksShownState`, effectively changing the visible range of the timeline.
 *   **`setupStore: () => void`**: A callback function used to reload or reinitialize store data. This is typically invoked after significant settings changes that require a data refresh.
 *   **`showingPastDates: boolean`**: A boolean indicating whether past dates are currently being displayed in the timeline.
-*   **`timelineViewRef?: React.RefObject<TimelineViewHandle | undefined>`**: A React ref object pointing to the `TimelineView` component's imperative handle. This is used to programmatically scroll the timeline to specific sections.
+*   **`timelineViewRef?: React.RefObject<[TimelineViewHandle](./TimelineViewHandle.md) | undefined>`**: A React ref object pointing to the `[TimelineView](./TimelineView.md)` component's imperative handle. This is used to programmatically scroll the timeline to specific sections.
 *   **`datesShown: number`**: The number of individual dates (or columns) currently shown in the timeline view. (Note: While a prop, its direct usage within the header's own logic isn't prominent in the provided snippet, but it's passed by the parent.)
 
 ## Functionality
 
 *   **Settings Dropdown Menu**:
-    *   Accessed via a "more-horizontal" icon `Button`.
+    *   Accessed via a "more-horizontal" icon `[Button](./Button.md)`.
     *   Controls visibility of a dropdown menu (`tr-menu`).
     *   **Toggle Past/Future Dates**: A button to toggle the `showingPastDates` state (via `setters.set({ showingPastDates: !showingPastDates })`). The button text and icon change accordingly ("Future" with chevron-right, "Past" with chevron-left).
     *   **Reload**: A "Reload" button that calls the `setupStore()` prop function.
@@ -28,21 +28,21 @@ The component accepts the following props:
     *   **Layout**: Offers buttons to change the timeline layout (`Hours`, `Days`, `Weeks`). Clicking an option updates the `viewMode` setting in the global store via `getters.getObsidianAPI().setSetting({ viewMode: ... })`.
     *   The dropdown closes if a click occurs outside its frame.
 *   **Search Button**:
-    *   An icon `Button` with a "search" icon.
+    *   An icon `[Button](./Button.md)` with a "search" icon.
     *   When clicked, it sets `searchStatus: true` in the global application store (via `setters.set`), which typically triggers a search modal or interface.
 *   **New Task Button**:
-    *   Renders the `NewTask` component, allowing for quick task creation.
+    *   Renders the `[NewTask](./NewTask.md)` component, allowing for quick task creation.
     *   Its placement depends on `calendarMode` (derived from `viewMode === 'week'`):
         *   In `calendarMode` (week view), it's placed within the left control group.
         *   Otherwise (hour/day view), it's placed at the far right of the header.
 *   **Date Navigation Buttons**:
-    *   A scrollable horizontal list of `Button` components is rendered based on the `times` prop.
+    *   A scrollable horizontal list of `[Button](./Button.md)` components is rendered based on the `times` prop.
     *   Each button represents a date period or the "None" section for unscheduled tasks.
     *   The button text displays "None" for unscheduled or a formatted date (e.g., "Mon Nov 25") for specific periods.
-    *   Clicking a date button scrolls the `TimelineView` to the corresponding section using `timelineViewRef.current.scrollTo(sectionId)`.
-    *   These buttons are also `Droppable` targets, allowing tasks to be dragged onto them to schedule.
+    *   Clicking a date button scrolls the `[TimelineView](./TimelineView.md)` to the corresponding section using `timelineViewRef.current.scrollTo(sectionId)`.
+    *   These buttons are also `[Droppable](./Droppable.md)` targets, allowing tasks to be dragged onto them to schedule.
 *   **Next/Previous Period Buttons**:
-    *   "chevron-right" (next) and "chevron-left" (previous) icon `Button`s.
+    *   "chevron-right" (next) and "chevron-left" (previous) icon `[Button](./Button.md)`s.
     *   These call `setWeeksShown` to change the visible period. The increment/decrement step is 4 if `calendarMode` is true (week view), and 1 otherwise. The "chevron-left" button is only shown if `weeksShownState` is greater than the minimum.
 *   **Initial Scroll**:
     *   An `useEffect` hook attempts to scroll the timeline to the section corresponding to the current day (`time-ruler-${getToday()}`) on component mount or when `viewMode` or `showingPastDates` props change. (Note: The original implementation used jQuery for this, but the component aims to use `timelineViewRef` for scrolling to date sections clicked by the user).
@@ -57,23 +57,23 @@ The component accepts the following props:
     *   `settings.hideTimes: boolean`: Whether time details are hidden in the timeline. Read and toggled.
     *   `settings.groupBy: string | false`: The current task grouping strategy. Read and updated.
     *   `showingPastDates: boolean`: (Though also a prop) it's toggled via `setters.set` from the settings menu.
-    *   `apis.obsidian`: Used to access the Obsidian API for updating settings.
+    *   `apis.obsidian`: Used to access the `[ObsidianAPI](../../services/obsidianApi.md)` for updating settings.
     *   `isMobile: boolean`: (via `getters.getApp().isMobile`) Used to adjust button sizes in the settings menu.
     *   `searchStatus: boolean`: Set to `true` to initiate search.
 
 ## Interactions with Other Components and Services
 
 *   **Child Components**:
-    *   `Button`: Used extensively for all interactive elements (settings, navigation, date buttons).
-    *   `Droppable`: Wraps each date navigation button to make it a valid drop target for tasks.
-    *   `Logo`: Used for icons within the settings dropdown menu.
-    *   `NewTask`: Embedded for creating new tasks.
-*   **`TimelineViewHandle` (via `timelineViewRef`)**: The header interacts with the `TimelineView` component by calling its `scrollTo(sectionId)` method to navigate the timeline.
-*   **Zustand Store (`../app/store`)**:
+    *   `[Button](./Button.md)`: Used extensively for all interactive elements (settings, navigation, date buttons).
+    *   `[Droppable](./Droppable.md)`: Wraps each date navigation button to make it a valid drop target for tasks.
+    *   `[Logo](./Logo.md)`: Used for icons within the settings dropdown menu.
+    *   `[NewTask](./NewTask.md)`: Embedded for creating new tasks.
+*   **`[TimelineViewHandle](./TimelineViewHandle.md)` (via `timelineViewRef`)**: The header interacts with the `[TimelineView](./TimelineView.md)` component by calling its `scrollTo(sectionId)` method to navigate the timeline.
+*   **Zustand Store ([`../app/store`](../../store.md))**:
     *   `useAppStore`: Subscribes to parts of the global application state (`settings.viewMode`, `settings.hideTimes`).
-    *   `getters`: Used to access various parts of the store, including the Obsidian API instance (`getters.getObsidianAPI()`) and application status (`getters.getApp().isMobile`).
+    *   `getters`: Used to access various parts of the store, including the `[ObsidianAPI](../../services/obsidianApi.md)` instance (`getters.getObsidianAPI()`) and application status (`getters.getApp().isMobile`).
     *   `setters`: Used to modify global state, such as `setters.set({ showingPastDates: ... })` and `setters.set({ searchStatus: true })`.
-*   **Obsidian API**: Settings changes (like `hideTimes`, `groupBy`, `viewMode`) are persisted by calling `getters.getObsidianAPI().setSetting(...)`.
+*   **Obsidian API**: Settings changes (like `hideTimes`, `groupBy`, `viewMode`) are persisted by calling `getters.getObsidianAPI().setSetting(...)`. (Note: `getters.getObsidianAPI()` here refers to the service instance).
 *   **Luxon `DateTime` library**: Used for date manipulations, particularly for formatting dates on the navigation buttons (`DateTime.fromISO(...).toFormat('EEE MMM d')`).
 *   **`getToday` utility (`../services/util`)**: Used to get the ISO string for the current day, primarily for the initial scroll effect.
 
@@ -89,7 +89,7 @@ import { useAppStore, getters, setters, AppState } from '../app/store'; // Assum
 import { SimplifiedTimesType } from './TimeRulerHeader'; // Or from a shared types file
 
 const MainAppView = () => {
-  const timelineViewRef = useRef<TimelineViewHandle | undefined>(null);
+  const timelineViewRef = useRef<[TimelineViewHandle](./TimelineViewHandle.md) | undefined>(null);
   const [weeksShown, setWeeksShown] = useState(4); // Example state
   const showingPastDates = useAppStore(state => state.showingPastDates); // From global store
 

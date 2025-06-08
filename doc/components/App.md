@@ -6,10 +6,10 @@ The `App` component serves as the primary root UI component for the Time Ruler p
 
 ## Props
 
-*   **`apis: Required<AppState['apis']>`**:
-    *   An object containing initialized instances of `ObsidianAPI` and `CalendarAPI`.
+*   **`apis: Required<[AppState](../../store.md#appstate-interface)['apis']>`**:
+    *   An object containing initialized instances of `[ObsidianAPI](../../services/obsidianApi.md)` and `[CalendarAPI](../../services/calendarApi.md)`.
     *   These APIs are crucial for all data interactions (reading/writing tasks, fetching calendar events, accessing plugin settings).
-    *   The `App` component receives these from `TimeRulerView` and immediately passes them to the Zustand store via the `reload` function (which is then called by `AppInitializer`).
+    *   The `App` component receives these from `TimeRulerView` and immediately passes them to the Zustand store via the `reload` function (which is then called by `[AppInitializer](./AppInitializer.md)`).
 
 ## State Management
 
@@ -33,10 +33,10 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
 ### 1. Initialization and Data Loading (`reload` function)
 
 *   The `reload` async function is defined within `App` and is responsible for the primary data and settings hydration sequence.
-*   **Passed to `AppInitializer`**: `AppInitializer` calls `reload` on its first mount.
+*   **Passed to `[AppInitializer](./AppInitializer.md)`**: `[AppInitializer](./AppInitializer.md)` calls `reload` on its first mount.
 *   **Dataview Check**: Ensures the Dataview plugin is available and its index is ready before proceeding.
 *   **Settings Hydration**:
-    *   Calls `apis.obsidian.reload()` to ensure the `ObsidianAPI` service has the latest plugin settings.
+    *   Calls `apis.obsidian.reload()` to ensure the `[ObsidianAPI](../../services/obsidianApi.md)` service has the latest plugin settings.
     *   Fetches `dailyNoteInfo` using `getDailyNoteInfo()`.
     *   Constructs a `settings` object for the store by calling `apis.obsidian.getSetting()` for each relevant setting.
     *   Updates the Zustand store with `apis`, `dailyNoteInfo`, and `settings` using `setters.set()`.
@@ -48,11 +48,11 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
 
 *   The component returns a main `div` with `id='time-ruler'`. This `div` acts as the container for the entire Time Ruler UI and is styled for flex layout and background color.
 *   It renders the following key child components in order:
-    *   **`AppInitializer`**: Handles initial setup, data loading via `reload`, and manages `weeksShownState`.
+    *   **`[AppInitializer](./AppInitializer.md)`**: Handles initial setup, data loading via `reload`, and manages `weeksShownState`.
     *   **`DragOverlay`**: Provided by `@dnd-kit/core`, renders a preview of the item being dragged. Its content is determined by `getDragElement()`.
-    *   **`TimeRulerHeader`**: The header section of the Time Ruler, containing navigation controls, view mode toggles, and other actions. It receives props like `times` (simplified), `datesShown`, `weeksShownState`, `setWeeksShown`, `setupStore` (the `reload` function), `showingPastDates`, and `timelineViewRef`.
-    *   **`TimelineView`**: The core component that renders the actual timeline of days, tasks, and events. It receives `times` (the calculated time segments), `calendarMode`, `childWidth`, `childClass`, `showingPastDates`, and `borders`.
-    *   **`Search`**: Conditionally rendered when `searchStatus` from the store is `true`.
+    *   **`[TimeRulerHeader](./TimeRulerHeader.md)`**: The header section of the Time Ruler, containing navigation controls, view mode toggles, and other actions. It receives props like `times` (simplified), `datesShown`, `weeksShownState`, `setWeeksShown`, `setupStore` (the `reload` function), `showingPastDates`, and `timelineViewRef`.
+    *   **`[TimelineView](./TimelineView.md)`**: The core component that renders the actual timeline of days, tasks, and events. It receives `times` (the calculated time segments), `calendarMode`, `childWidth`, `childClass`, `showingPastDates`, and `borders`.
+    *   **`[Search](./Search.md)`**: Conditionally rendered when `searchStatus` from the store is `true`.
 
 ### 3. Drag and Drop Context (`@dnd-kit/core`)
 
@@ -64,12 +64,12 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
     *   `collisionDetection`: Uses `pointerWithin`.
     *   `measuring`: Configured with custom `measure` functions for `draggable` and `dragOverlay` that account for the `timeRulerContainerRef`'s bounding box. This ensures items are measured relative to the TimeRuler container.
     *   `sensors`: Configures `PointerSensor`, `MouseSensor` (for desktop), and `TouchSensor` (for mobile) with specific activation constraints (delay, tolerance).
-    *   `autoScroll`: Explicitly set to `false` for the `DndContext` itself, as auto-scrolling is handled by the `useAutoScroll` hook internally or within `TimelineView`.
-*   **`getDragElement()`**: A helper function that returns the appropriate React element to render in the `DragOverlay` based on `activeDrag.dragType` (e.g., `<Task>`, `<Group>`, `<Block>`).
+    *   `autoScroll`: Explicitly set to `false` for the `DndContext` itself, as auto-scrolling is handled by the `useAutoScroll` hook internally or within `[TimelineView](./TimelineView.md)`.
+*   **`getDragElement()`**: A helper function that returns the appropriate React element to render in the `DragOverlay` based on `activeDrag.dragType` (e.g., `<[Task](./Task.md)]>`, `<[Group](./Group.md)]>`, `<[Block](./Block.md)]>`).
 
 ### 4. Timeline Data Calculation (`times` array)
 
-*   The `App` component calculates the `times` array (`ActualTimesType`), which defines the segments to be rendered by `TimelineView`.
+*   The `App` component calculates the `times` array (`ActualTimesType`), which defines the segments to be rendered by `[TimelineView](./TimelineView.md)`.
 *   This array includes:
     *   An initial `{ type: 'unscheduled' }` segment.
     *   A "current" segment representing today (or the past leading up to "now" if `showingPastDates` is true). Its `startISO` and `endISO` are dynamically calculated based on `nowForTimes` (current moment), `today` (start of today), `dayStart` (from settings), and `showingPastDates`.
@@ -78,30 +78,30 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
 
 ### 5. Child Component Width Calculation
 
-*   Uses the `useChildWidth()` custom hook (from `src/services/util.ts`) to determine `childWidth` (number of logical columns, e.g., 1 for day view, 7 for week view) and `childClass` (CSS class for column width). This is passed to `TimelineView`.
+*   Uses the `useChildWidth()` custom hook (from `src/services/util.ts`) to determine `childWidth` (number of logical columns, e.g., 1 for day view, 7 for week view) and `childClass` (CSS class for column width). This is passed to `[TimelineView](./TimelineView.md)`.
 *   The `trueChildWidth` from the store (which is set by `useChildWidth` via a `useEffect` calling `setters.set`) is used for sizing the `DragOverlay`.
 
 ## Component Interactions
 
-*   **`AppInitializer`**:
+*   **`[AppInitializer](./AppInitializer.md)`**:
     *   Receives the `reload` function, `weeksShownState`, `setWeeksShown`, `showingPastDates`, `searchWithinWeeks`, `calendarMode`, and `timelineViewRef`.
     *   Responsible for triggering the initial `reload` and managing effects related to `weeksShownState` changes (which might trigger further data loads).
-*   **`TimeRulerHeader`**:
+*   **`[TimeRulerHeader](./TimeRulerHeader.md)`**:
     *   Receives a simplified `times` array, `datesShown`, `weeksShownState`, `setWeeksShown`, the `reload` function (as `setupStore`), `showingPastDates`, and `timelineViewRef`.
     *   Handles user interactions for navigation and view adjustments.
-*   **`TimelineView`**:
+*   **`[TimelineView](./TimelineView.md)`**:
     *   Receives the fully calculated `times` array, `calendarMode`, `childWidth`, `childClass`, `showingPastDates`, and `borders`.
     *   Responsible for rendering the main scrollable timeline.
     *   Manages its own internal scrolling logic and virtualization (previously, some of this might have been in `App.tsx`).
-*   **`Search`**:
+*   **`[Search](./Search.md)`**:
     *   Rendered conditionally based on `searchStatus` from the store.
-*   **Zustand Store (`src/app/store.ts`)**:
+*   **Zustand Store ([`src/app/store.ts`](../../store.md))**:
     *   `App` reads various state slices (settings, UI flags, drag data).
-    *   The `reload` function (called by `AppInitializer`) is a primary mechanism for populating the store with `apis`, `settings`, and initial `tasks` and `events`.
+    *   The `reload` function (called by `[AppInitializer](./AppInitializer.md)`) is a primary mechanism for populating the store with `apis`, `settings`, and initial `tasks` and `events`.
     *   Drag event handlers (`onDragStart`, `onDragEnd` from `dragging.ts`) interact heavily with the store to update `dragData` and task data (`setters.patchTasks`).
 *   **Services**:
     *   `src/services/dragging.ts`: Provides `onDragStart` and `onDragEnd` handlers for `DndContext`.
-    *   `src/services/obsidianApi.ts` & `src/services/calendarApi.ts`: Instances are passed via props and set into the store by `reload`. Their methods are then called by `reload` itself or by other actions (like those in `dragging.ts`).
+    *   `src/services/obsidianApi.ts` & `src/services/calendarApi.ts`: Instances of `[ObsidianAPI](../../services/obsidianApi.md)` and `[CalendarAPI](../../services/calendarApi.md)` are passed via props and set into the store by `reload`. Their methods are then called by `reload` itself or by other actions (like those in `dragging.ts`).
     *   `src/services/util.ts`: Uses `getToday`, `toISO`, `useChildWidth`.
     *   `src/services/autoScroll.ts`: The `useAutoScroll()` hook is called to enable auto-scrolling during drag operations within relevant containers.
 
@@ -110,8 +110,8 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
 *   **`timeRulerContainerRef = useRef<HTMLDivElement>(null)`**:
     *   Attached to the main `div#time-ruler`.
     *   Used by the `measuringConfig` for `@dnd-kit/core` to calculate drag item dimensions relative to this container.
-*   **`timelineViewRef = useRef<TimelineViewHandle>(null)`**:
-    *   A ref to the `TimelineView` component instance.
-    *   Allows parent components (`App`, `AppInitializer`, `TimeRulerHeader`) to call imperative methods on `TimelineView` (e.g., for scrolling to specific sections via `timelineViewRef.current.scrollToSection()`).
+*   **`timelineViewRef = useRef<[TimelineViewHandle](./TimelineViewHandle.md)>(null)`**:
+    *   A ref to the `[TimelineView](./TimelineView.md)` component instance.
+    *   Allows parent components (`App`, `[AppInitializer](./AppInitializer.md)`, `[TimeRulerHeader](./TimeRulerHeader.md)`) to call imperative methods on `[TimelineView](./TimelineView.md)` (e.g., for scrolling to specific sections via `timelineViewRef.current.scrollTo()`).
 
-The `App.tsx` component has been refactored to delegate many of its previous responsibilities to child components like `AppInitializer` and `TimelineView`, making it more focused on overall structure, DND context, and initial setup coordination.
+The `App.tsx` component has been refactored to delegate many of its previous responsibilities to child components like `[AppInitializer](./AppInitializer.md)` and `[TimelineView](./TimelineView.md)`, making it more focused on overall structure, DND context, and initial setup coordination.

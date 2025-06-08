@@ -9,7 +9,7 @@ The `TaskTags` component is responsible for displaying the list of tags associat
 The component accepts the following props:
 
 *   **`tags: string[]`**: An array of strings, where each string is a tag associated with the task (e.g., `["#projectA", "#urgent"]`).
-*   **`groupBy: string | false`**: A string indicating the current criteria by which tasks are grouped in the application (e.g., `'status'`, `'tags'`, `'path'`), or `false` if no grouping is active. This is typically derived from `AppState['settings']['groupBy']`.
+*   **`groupBy: string | false`**: A string indicating the current criteria by which tasks are grouped in the application (e.g., `'status'`, `'tags'`, `'path'`), or `false` if no grouping is active. This is typically derived from `[AppState](../../store.md#appstate-interface)['settings']['groupBy']`.
 
 ## Functionality
 

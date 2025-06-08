@@ -8,20 +8,20 @@ The `TimelineView` component is the core scrollable area of the Time Ruler, resp
 
 The component accepts the following props:
 
-*   **`times: ActualTimesType[]`**: An array of configuration objects. Each object can either be props for a `Day` component (including `startISO`, `type`, tasks, events, etc.) or an object with `type: 'unscheduled'` for the unscheduled tasks section.
+*   **`times: ActualTimesType[]`**: An array of configuration objects. Each object can either be props for a `[Day](./Day.md)` component (including `startISO`, `type`, tasks, events, etc.) or an object with `type: 'unscheduled'` for the unscheduled tasks section.
 *   **`calendarMode: boolean`**: A boolean flag. If `true`, the timeline is in "week" view mode, which affects layout (potentially a grid-like structure) and scrolling behavior.
 *   **`childWidth: number`**: Represents the number of logical columns the view is divided into (e.g., 1 for day view, 7 for week view). This is used in virtualization calculations.
 *   **`childClass: string`**: A CSS class string (e.g., `w-day`, `w-hour`) applied to child elements to control their width within the timeline.
 *   **`showingPastDates: boolean`**: Indicates if past dates are being displayed. This can influence the initial scroll position of the timeline.
-*   **`borders: AppState['settings']['borders']`**: A boolean from global application settings that controls whether individual items (days/unscheduled) within the timeline have visible borders.
+*   **`borders: [AppState](../../store.md#appstate-interface)['settings']['borders']`**: A boolean from global application settings that controls whether individual items (days/unscheduled) within the timeline have visible borders.
 
-## `TimelineViewHandle` (Exposed via `ref`)
+## [`TimelineViewHandle`](./TimelineViewHandle.md) (Exposed via `ref`)
 
 Parent components can obtain a ref to `TimelineView` to access the following imperative methods:
 
 *   **`scrollTo(sectionId: string): void`**:
     *   Scrolls the timeline to bring a specific section into view.
-    *   `sectionId` can be an ISO date string (e.g., "YYYY-MM-DD") corresponding to a `Day` component, or the string `'unscheduled'` to target the `Unscheduled` component.
+    *   `sectionId` can be an ISO date string (e.g., "YYYY-MM-DD") corresponding to a `[Day](./Day.md)` component, or the string `'unscheduled'` to target the `[Unscheduled](./Unscheduled.md)` component.
     *   The scrolling behavior is smooth (`behavior: 'smooth'`).
 
 ## Functionality
@@ -37,7 +37,7 @@ Parent components can obtain a ref to `TimelineView` to access the following imp
 *   **Rendering**:
     *   The component maps over the `times` prop array.
     *   For each item in `times`:
-        *   If the item's index `i` falls within the `scrollViews` range (`i >= scrollViews[0] && i <= scrollViews[1]`), the corresponding component (`Day` or `Unscheduled`) is rendered.
+        *   If the item's index `i` falls within the `scrollViews` range (`i >= scrollViews[0] && i <= scrollViews[1]`), the corresponding component (`[Day](./Day.md)` or `[Unscheduled](./Unscheduled.md)`) is rendered.
         *   Otherwise (if outside the `scrollViews` range), nothing is rendered for that item's slot, effectively "virtualizing" it out of the DOM.
     *   Each rendered section (a day or the unscheduled panel) is wrapped in a `div`. This wrapper is given a unique `id` attribute:
         *   For days: `time-ruler-YYYY-MM-DD` (e.g., `time-ruler-2023-11-25`), derived using `getStartDate`.
@@ -67,12 +67,12 @@ Parent components can obtain a ref to `TimelineView` to access the following imp
 
 ## Interactions with Other Components and Services
 
-*   **`Day` Component (`./Day.tsx`)**: `TimelineView` renders multiple instances of the `Day` component, passing parts of the `times` array items as props to each `Day`.
-*   **`Unscheduled` Component (`./Unscheduled.tsx`)**: `TimelineView` renders one instance of the `Unscheduled` component if it's included in the `times` prop.
-*   **`getStartDate` Utility (`../services/util`)**: Used to format the date part of the `id` for `Day` component wrappers, ensuring consistent ID generation for scrolling.
-*   **`TimelineViewHandle` Type (`./TimelineViewHandle.ts`)**: Defines the shape of the imperative handle exposed by this component via `ref`.
+*   **`[Day](./Day.md)` Component (`./Day.tsx`)**: `TimelineView` renders multiple instances of the `[Day](./Day.md)` component, passing parts of the `times` array items as props to each `[Day](./Day.md)`.
+*   **`[Unscheduled](./Unscheduled.md)` Component (`./Unscheduled.tsx`)**: `TimelineView` renders one instance of the `[Unscheduled](./Unscheduled.md)` component if it's included in the `times` prop.
+*   **`getStartDate` Utility (`../services/util`)**: Used to format the date part of the `id` for `[Day](./Day.md)` component wrappers, ensuring consistent ID generation for scrolling.
+*   **`[TimelineViewHandle](./TimelineViewHandle.md)` Type (`./TimelineViewHandle.ts`)**: Defines the shape of the imperative handle exposed by this component via `ref`.
 *   **`ActualTimesType` Type**: Defines the expected structure of the `times` prop array.
-*   **`AppState['settings']['borders']`**: Consumes this part of the application settings (passed as a prop) to conditionally apply borders to items.
+*   **`[AppState](../../store.md#appstate-interface)['settings']['borders']`**: Consumes this part of the application settings (passed as a prop) to conditionally apply borders to items.
 
 ## Usage Example
 
@@ -83,7 +83,7 @@ import TimelineView, { TimelineViewProps, ActualTimesType, TimelineViewHandle } 
 import { useAppStore } from '../app/store'; // Assuming AppState is available via store
 
 const MyTimelineContainer = () => {
-  const timelineViewRef = useRef<TimelineViewHandle>(null);
+  const timelineViewRef = useRef<[TimelineViewHandle](./TimelineViewHandle.md)>(null);
   const settings = useAppStore(state => state.settings);
   const calendarMode = settings.viewMode === 'week';
   const childWidth = calendarMode ? 7 : 1; // Example logic
