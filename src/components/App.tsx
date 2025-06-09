@@ -271,6 +271,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
       >
         <div
           id='time-ruler'
+          data-testid='time-ruler-container' // Added data-testid
           ref={timeRulerContainerRef} // Attach the ref
           style={{
             height: '100%',

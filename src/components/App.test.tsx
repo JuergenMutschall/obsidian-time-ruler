@@ -113,12 +113,15 @@ const mockFullApisProp = {
   calendar: mockCalendarApiInstance as any,
 };
 
+import { screen } from "@testing-library/react"; // Import screen
+
 describe("App", () => {
-  it("renders without crashing", async () => {
+  it("renders without crashing and shows the main container", async () => {
     // Use act to handle potential async operations during initial render (useEffect in AppInitializer)
     await act(async () => {
       render(<App apis={mockFullApisProp} />);
     });
-    // Add basic assertions here if needed, e.g., checking for a known element
+    // Check if the main container with data-testid 'time-ruler-container' is rendered
+    expect(screen.getByTestId('time-ruler-container')).toBeInTheDocument();
   });
 });

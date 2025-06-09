@@ -11,6 +11,7 @@ export default function Logo({ src, className = '', title = '' }) {
 
   return (
     <div
+      data-testid="logo-container" // Added for testing
       className={`flex select-none flex-col items-center justify-center ${className} ${
         !className.includes('h-') ? 'h-full' : ''
       } ${!className.includes('w-') ? 'w-full' : ''}`}
