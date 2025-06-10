@@ -70,5 +70,28 @@ module.exports = {
     addSettingTab(tab) {}
     registerMarkdownCodeBlockProcessor(id, handler) {}
   },
+  Setting: class {
+    constructor(containerEl) {
+      this.containerEl = containerEl;
+      // Mock chainable methods
+      this.setName = jest.fn().mockReturnThis();
+      this.setDesc = jest.fn().mockReturnThis();
+      this.addText = jest.fn().mockReturnThis();
+      this.addToggle = jest.fn().mockImplementation((callback) => {
+        // Optionally, invoke the callback with a mock toggle component if needed
+        if (typeof callback === 'function') {
+          const mockToggle = {
+            setValue: jest.fn().mockReturnThis(),
+            onChange: jest.fn().mockReturnThis(),
+          };
+          callback(mockToggle);
+        }
+        return this;
+      });
+      this.addButton = jest.fn().mockReturnThis();
+      this.clear = jest.fn().mockReturnThis(); // Add the clear method
+      // Add other methods as they are used by your components
+    }
+  },
   // Add other exports as needed by your components
 };

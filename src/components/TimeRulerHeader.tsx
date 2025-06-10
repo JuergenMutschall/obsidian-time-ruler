@@ -47,7 +47,9 @@ const TimeRulerHeader = ({
   const calendarMode = viewMode === 'week';
 
   useEffect(() => {
-    $(`#time-ruler-${getToday()}`)[0]?.scrollIntoView();
+    // Replaced jQuery with document.querySelector
+    const element = document.querySelector(`#time-ruler-${getToday()}`);
+    element?.scrollIntoView();
   }, [viewMode, showingPastDates]);
 
   const nextButton = (
