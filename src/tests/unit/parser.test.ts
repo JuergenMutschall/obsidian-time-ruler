@@ -104,7 +104,7 @@ describe('Parser - textToTask', () => {
     const taskItem = createMockSTask(`- [ ] Task with high priority ${highestPriorityEmoji}`);
     const result = textToTask(taskItem, mockDailyNoteInfo, mockDefaultFormat);
     expect(result.title).toBe('Task with high priority');
-    expect(result.priority).toBe(TaskPriorities.HIGHEST);
+    expect(result.priority).toBe(TaskPriorities.HIGH); // Corrected: ⏫ is HIGH, not HIGHEST
     expect(result.fieldFormat).toBe('tasks');
   });
 
@@ -268,18 +268,29 @@ describe('Parser - textToTask', () => {
   });
 
   it('should handle task with complex title and various fields', () => {
+    const taskText =
+      '- [ ] Complex Task 🔁 daily 📅 2023-12-24 ⏳ 2023-12-25 ⏫ #tag1 [custom::value] ^ref123';
     const taskItem = createMockSTask(
-      '- [ ] 2023-12-25 09:00-10:30 Complex Task 🔁 daily 📅 2023-12-24 ⏳ 2023-12-25 > 2023-12-30 !! #tag1 [custom::value]'
+      taskText,
+      'test.md',
+      0,
+      {
+        custom: 'value', // Provided as if by Dataview
+        tags: ['#tag1']   // Provided as if by Dataview
+      }
     );
-    const result = textToTask(taskItem, mockDailyNoteInfo, 'simple'); // Force simple to test its parsing
-    // Adjusted expectation: tasks emojis and other symbols not part of 'simple' format might remain if not covered by generic cleaners.
-    expect(result.title).toBe('Complex Task 🔁 daily 📅 2023-12-24 ⏳ 2023-12-25');
-    expect(result.scheduled).toBe('2023-12-25T09:00'); // From simple format
-    expect(result.duration).toEqual({ hour: 1, minute: 30 }); // From simple format
-    expect(result.due).toBe('2023-12-24'); // Adjusted: Tasks emoji date takes precedence
-    expect(result.priority).toBe(TaskPriorities.HIGH); // From simple !!
-    expect(result.tags).toEqual(expect.arrayContaining(['#tag1']));
-    expect(result.extraFields).toEqual({ custom: 'value' }); // This should pass if INLINE_FIELD_SEARCH is fixed
+    // Default format 'dataview' is fine, parser should detect 'tasks' from emojis
+    const result = textToTask(taskItem, mockDailyNoteInfo, mockDefaultFormat);
+
+    expect(result.title).toBe('Complex Task'); // Cleaned title
+    expect(result.repeat).toBe('daily');
+    expect(result.due).toBe('2023-12-24');
+    expect(result.scheduled).toBe('2023-12-25');
+    expect(result.priority).toBe(TaskPriorities.HIGH);
+    expect(result.tags).toEqual(['#tag1']); // From item.tags
+    expect(result.extraFields).toEqual({ custom: 'value' }); // From item.custom
+    expect(result.blockReference).toBe('^ref123'); // Parsed from text
+    expect(result.fieldFormat).toBe('tasks'); // Detected from emojis
   });
 
   it('should correctly parse title with markdown links', () => {

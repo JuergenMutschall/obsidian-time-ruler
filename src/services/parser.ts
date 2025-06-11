@@ -75,7 +75,7 @@ export function textToTask(
       .replace(SIMPLE_SCHEDULED_DATE, '')
       .replace(SIMPLE_SCHEDULED_TIME, '')
       .replace(SIMPLE_DUE, '')
-      .replace(SIMPLE_PRIORITY, '')
+      // SIMPLE_PRIORITY is removed by parsePriority from the title later if found
   } else if (mainFormat === 'tasks') {
     originalTitle = originalTitle
       .replace(TASKS_REPEAT_SEARCH, '')
@@ -90,7 +90,11 @@ export function textToTask(
     .replace(MD_LINK_LINE_SEARCH, '$1')
     .replace(LINK_SEARCH, '[$1]')
     .replace(/^\s+/u, '')
-    .replace(/\s+$/u, '')
+    .replace(/\s+$/u, '');
+
+  // Priority is parsed before this, if simple format and priority was found,
+  // the title might still contain the priority marker.
+  // We will clean it after priority parsing.
 
   let notes = item.text.includes('\n')
     ? item.text.match(/\n((.|\n)*$)/)?.[1]
@@ -324,7 +328,8 @@ export function textToTask(
   };
 
   const parseRepeat = () => {
-    return item['repeat'] ?? titleLine.match(TASKS_REPEAT_SEARCH)?.[1]
+    const repeatValue = item['repeat'] ?? titleLine.match(TASKS_REPEAT_SEARCH)?.[1];
+    return repeatValue ? repeatValue.trim() : undefined;
   }
 
   const parseQuery = () => {
@@ -342,6 +347,22 @@ export function textToTask(
   const repeat = parseRepeat()
   const priority = parsePriority()
   const reminder = parseReminder()
+
+  // Clean simple priority from title if it was parsed
+  if (mainFormat === 'simple' && priority !== TaskPriorities.DEFAULT) {
+    // Check if the original title (which forms the base of 'title')
+    // ended with a pattern that parsePriority would have matched.
+    // parsePriority itself uses a cleaned version of originalTitle to find the marker.
+    // So, we re-apply a similar logic for cleaning the final 'title'.
+    const textUsedByParsePriorityForSimple = originalTitle
+        .replace(SIMPLE_SCHEDULED_DATE, '')
+        .replace(SIMPLE_SCHEDULED_TIME, '')
+        .replace(SIMPLE_DUE, '');
+    const simplePriorityRegexInternal = /\s*(\?|!{1,3})$/u;
+    if (simplePriorityRegexInternal.test(textUsedByParsePriorityForSimple)) {
+        title = title.replace(simplePriorityRegexInternal, '');
+    }
+  }
 
   const query = parseQuery()
 
