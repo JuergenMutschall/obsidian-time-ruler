@@ -33,11 +33,12 @@ const TASKS_REPEAT_SEARCH = new RegExp(
 
 const SIMPLE_SCHEDULED_DATE = /^(\d{4}-\d{2}-\d{2}) /u
 const SIMPLE_SCHEDULED_TIME = /^(\d{1,2}(:\d{1,2})?( ?- ?\d{1,2}(:\d{1,2})?)?)/u
-const SIMPLE_PRIORITY = / (\?|!{1,3})$/u
+const SIMPLE_PRIORITY = /\s+(\?|!{1,3})$/u // Reverted: strict end for priority marker
 const SIMPLE_DUE = / ?> ?(\d{4}-\d{2}-\d{2})/u
 
 const KANBAN_DATE = / ?@\{(\d{4}-\d{2}-\d{2})\}/u
 const KANBAN_TIME = / ?@@\{(\d{2}:\d{2})\}/u
+const TASK_MARKDOWN_REGEX = /^-\s*\[[ x~-]\]\s*/u // Moved to module scope
 
 export function textToTask(
   item: any,
@@ -45,7 +46,8 @@ export function textToTask(
   defaultFormat: TimeRulerPlugin['settings']['fieldFormat']
 ): TaskProps {
   const { main: mainFormat } = detectFieldFormat(item.text, defaultFormat)
-  const INLINE_FIELD_SEARCH = /[\[\(][^\]\)]+:: [^\]\)]+[\]\)] */gu
+  // Adjusted INLINE_FIELD_SEARCH to make the space after :: optional and content of value also optional.
+  const INLINE_FIELD_SEARCH = /[\[\(][^\]\)]+::\s*[^\]\)]*[\]\)]\s*/gu
   const HASHTAG_SEARCH = /#[^\s]+\s?/gu
   const MD_LINK_LINE_SEARCH = /\[\[.*?\|(.*?)\]\]/gu
   const LINK_SEARCH = /\[(.*?)\]\(.*?\)/gu
@@ -54,14 +56,18 @@ export function textToTask(
     'u'
   )
   const BLOCK_REFERENCE = /\^[a-z0-9]+$/u
+  // const TASK_MARKDOWN_REGEX = /^-\s*\[[ x~-]\]\s*/u // Now in module scope
 
   const titleLine: string = item.text.match(/(.*?)(\n|$)/u)?.[1] ?? ''
 
   let originalTitle: string = titleLine
+    .replace(TASK_MARKDOWN_REGEX, '')
     .replace(BLOCK_REFERENCE, '')
     .replace(INLINE_FIELD_SEARCH, '')
     .replace(HASHTAG_SEARCH, '')
     .replace(REMINDER_MATCH, '')
+
+  originalTitle = originalTitle.trim(); // Trim after generic cleaning, before format-specific
 
   if (mainFormat === 'simple') {
     originalTitle = originalTitle
@@ -73,7 +79,7 @@ export function textToTask(
   } else if (mainFormat === 'tasks') {
     originalTitle = originalTitle
       .replace(TASKS_REPEAT_SEARCH, '')
-      .replace(TASKS_EMOJI_SEARCH, '')
+      .replace(TASKS_EMOJI_SEARCH, '') // Reverted to TASKS_EMOJI_SEARCH for title cleaning
   } else if (mainFormat === 'kanban') {
     originalTitle = originalTitle
       .replace(KANBAN_DATE, '')
@@ -113,6 +119,8 @@ export function textToTask(
       duration = { hour: rawLength.hours, minute: rawLength.minutes }
 
     let isDate: boolean = true
+    const strippedTitleLine = titleLine.replace(TASK_MARKDOWN_REGEX, ''); // Define once
+
     if (rawScheduled) {
       // has Dataview scheduled, check if it's an ISO
       const hasTime = /scheduled:: ?\d{4}-\d{2}-\d{2}T/.test(item.text)
@@ -121,22 +129,29 @@ export function textToTask(
 
     // test for date
     if (!rawScheduled) {
-      // test inline
-      const inlineDate =
-        new RegExp(`${keyToTasksEmoji.scheduled} ?(${ISO_MATCH})`)?.[1] ??
-        titleLine.match(SIMPLE_SCHEDULED_DATE)?.[1]
-      if (inlineDate) {
-        rawScheduled = DateTime.fromISO(inlineDate)
-        if (!isDateISO(inlineDate)) isDate = false
+      // test inline (Tasks plugin format first)
+      const tasksInlineDate = titleLine.match(new RegExp(`${keyToTasksEmoji.scheduled} ?(${ISO_MATCH})`))?.[1];
+      if (tasksInlineDate) {
+        rawScheduled = DateTime.fromISO(tasksInlineDate);
+        if (!isDateISO(tasksInlineDate)) isDate = false;
       }
+    }
+
+    // If still no date, and format might be simple, check for simple date format
+    if (!rawScheduled && mainFormat === 'simple') {
+        const simpleDateMatch = strippedTitleLine.match(SIMPLE_SCHEDULED_DATE)?.[1];
+        if (simpleDateMatch) {
+            rawScheduled = DateTime.fromISO(simpleDateMatch);
+            // isDate remains true by default (date only)
+        }
     }
 
     if (!rawScheduled) {
       // test for kanban
-      const kanbanDate = titleLine.match(KANBAN_DATE)?.[1]
+      const kanbanDate = strippedTitleLine.match(KANBAN_DATE)?.[1] // Use strippedTitleLine
       if (kanbanDate) {
         rawScheduled = DateTime.fromISO(kanbanDate)
-        const kanbanTime = titleLine.match(KANBAN_TIME)?.[1]
+        const kanbanTime = strippedTitleLine.match(KANBAN_TIME)?.[1] // Use strippedTitleLine
 
         if (kanbanTime) {
           const [hours, minutes] = kanbanTime.split(':')
@@ -176,8 +191,9 @@ export function textToTask(
           if (splitEndTime[1]) endMinute = parseInt(splitEndTime[1])
         }
       } else {
-        const titleWithoutDate = titleLine.replace(SIMPLE_SCHEDULED_DATE, '')
-        const simpleScheduledTime = titleWithoutDate.match(
+        // Use strippedTitleLine for extracting simple time
+        const titleWithoutDateForSimpleTime = strippedTitleLine.replace(SIMPLE_SCHEDULED_DATE, '')
+        const simpleScheduledTime = titleWithoutDateForSimpleTime.match(
           SIMPLE_SCHEDULED_TIME
         )?.[1]
         if (simpleScheduledTime) {
@@ -265,32 +281,47 @@ export function textToTask(
   }
 
   const parsePriority = (): number => {
-    let priority = item['priority'] as number | string
+    let priority = item['priority'] as number | string; // Restored item.priority check
 
-    if (typeof priority === 'number') return priority
-    else if (typeof priority === 'string') {
-      priority = priority.toLowerCase()
-      return priorityKeyToNumber[priority] ?? TaskPriorities.DEFAULT
+    if (typeof priority === 'number') return priority;
+    else if (typeof priority === 'string') { // Restored item.priority as string check
+      priority = priority.toLowerCase();
+      return priorityKeyToNumber[priority] ?? TaskPriorities.DEFAULT;
     } else {
-      // tasks priority
-      for (let emoji of [
-        keyToTasksEmoji.highest,
-        keyToTasksEmoji.high,
-        keyToTasksEmoji.medium,
-        keyToTasksEmoji.low,
-        keyToTasksEmoji.lowest,
-      ]) {
-        if (item.text.includes(emoji))
-          return priorityKeyToNumber[TasksEmojiToKey[emoji]]
+      if (mainFormat === 'simple') {
+        const textForSimplePriority = originalTitle
+          .replace(SIMPLE_SCHEDULED_DATE, '')
+          .replace(SIMPLE_SCHEDULED_TIME, '')
+          .replace(SIMPLE_DUE, '');
+        // Try slightly more flexible regex for simple priority match
+        const simplePriorityRegex = /\s*(\?|!{1,3})$/u;
+        const priorityMatch = textForSimplePriority.match(simplePriorityRegex)?.[1];
+        if (priorityMatch) {
+          return simplePriorityToNumber[priorityMatch];
+        }
       }
 
-      // simple priority
-      const priorityMatch = titleLine.match(SIMPLE_PRIORITY)?.[1]
-      if (priorityMatch) return simplePriorityToNumber[priorityMatch]
+      // Fallback or other formats: check for tasks plugin priority emojis in raw item.text
+      // Ordered from highest to lowest to prevent mis-matching (e.g. ⏫ includes 🔼 on some systems/fonts)
+      // This order was already correct, but the includes might be the issue.
+      if (item.text.includes(keyToTasksEmoji.highest)) {
+        return priorityKeyToNumber[TasksEmojiToKey[keyToTasksEmoji.highest]];
+      }
+      if (item.text.includes(keyToTasksEmoji.high)) {
+        return priorityKeyToNumber[TasksEmojiToKey[keyToTasksEmoji.high]];
+      }
+      if (item.text.includes(keyToTasksEmoji.medium)) {
+        return priorityKeyToNumber[TasksEmojiToKey[keyToTasksEmoji.medium]];
+      }
+      if (item.text.includes(keyToTasksEmoji.low)) {
+        return priorityKeyToNumber[TasksEmojiToKey[keyToTasksEmoji.low]];
+      }
+      if (item.text.includes(keyToTasksEmoji.lowest)) {
+        return priorityKeyToNumber[TasksEmojiToKey[keyToTasksEmoji.lowest]];
+      }
     }
-
-    return TaskPriorities.DEFAULT
-  }
+    return TaskPriorities.DEFAULT;
+  };
 
   const parseRepeat = () => {
     return item['repeat'] ?? titleLine.match(TASKS_REPEAT_SEARCH)?.[1]
@@ -363,7 +394,7 @@ export function textToTask(
 
 export function pageToTask(
   item: Record<string, Literal> & { file: PageMetadata },
-  defaultFieldFormat: TimeRulerPlugin['settings']['fieldFormat']
+  passedInDefaultFieldFormat: TimeRulerPlugin['settings']['fieldFormat']
 ): TaskProps {
   const testDateTime = (prop) =>
     DateTime.isDateTime(prop)
@@ -435,7 +466,7 @@ export function pageToTask(
   const { scheduled, length } = parseScheduledAndLength()
 
   const fieldFormat: FieldFormat['main'] =
-    item.date || item.startTime ? 'full-calendar' : 'dataview'
+    item.date || item.startTime ? 'full-calendar' : passedInDefaultFieldFormat; // Use renamed parameter
 
   return {
     id: item.file.path,
@@ -482,10 +513,11 @@ const detectFieldFormat = (
   defaultFormat: FieldFormat['main']
 ): FieldFormat => {
   const parseMain = (): FieldFormat['main'] => {
-    if (SIMPLE_SCHEDULED_DATE.test(text) || SIMPLE_DUE.test(text))
+    const strippedText = text.replace(TASK_MARKDOWN_REGEX, ''); // Consider text without task markdown
+    if (SIMPLE_SCHEDULED_DATE.test(strippedText) || SIMPLE_DUE.test(strippedText)) // Test on strippedText
       return 'simple'
     for (let emoji of Object.keys(TasksEmojiToKey)) {
-      if (text.contains(emoji)) return 'tasks'
+      if (text.includes(emoji)) return 'tasks' // Keep testing on original text for emojis
     }
     if (KANBAN_DATE.test(text)) return 'kanban'
     if (/\[allDay:: |\[date:: |\[startTime:: |\[endTime:: /.test(text))
@@ -495,7 +527,7 @@ const detectFieldFormat = (
   }
 
   const parseReminder = (): FieldFormat['reminder'] => {
-    if (text.contains(keyToTasksEmoji.reminder)) return 'tasks'
+    if (text.includes(keyToTasksEmoji.reminder)) return 'tasks'
     return 'native'
   }
 
