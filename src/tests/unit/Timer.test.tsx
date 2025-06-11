@@ -1,9 +1,9 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import Toggle from './Toggle';
+import { Timer } from '../../components/Timer';
 
-describe('Toggle', () => {
+describe('Timer', () => {
   it('renders without crashing', () => {
-    render(<Toggle />);
+    render(<Timer />);
   });
 });

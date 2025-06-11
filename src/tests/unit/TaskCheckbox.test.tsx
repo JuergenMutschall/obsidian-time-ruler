@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
-import TaskCheckbox from './TaskCheckbox'; // Adjust path
+import TaskCheckbox from '../../components/TaskCheckbox'; // Adjust path
 
 // Since Button is a simple div wrapper, direct import is fine.
 // If Button had complex logic/side effects, mocking would be more relevant.

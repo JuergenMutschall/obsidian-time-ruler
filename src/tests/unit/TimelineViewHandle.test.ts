@@ -1,4 +1,4 @@
-// import { functionToTest } from './TimelineViewHandle'; // Assuming TimelineViewHandle exports 'functionToTest'
+// import { functionToTest } from '../../components/TimelineViewHandle'; // Assuming TimelineViewHandle exports 'functionToTest'
 
 describe('TimelineViewHandle', () => {
   it('should perform its intended function correctly', () => {

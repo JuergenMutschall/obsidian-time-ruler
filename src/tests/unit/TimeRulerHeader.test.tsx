@@ -1,9 +1,9 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import TimeRulerHeader from './TimeRulerHeader';
+import TimeRulerHeader from '../../components/TimeRulerHeader';
 
 // Mock the store
-jest.mock('../app/store', () => ({
+jest.mock('../../app/store', () => ({
   useAppStore: jest.fn((selector) => selector({
     settings: {
       viewMode: 'day', // Default view mode

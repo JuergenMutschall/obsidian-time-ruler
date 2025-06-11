@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import TaskNotes from './TaskNotes'; // Adjust path if necessary
+import TaskNotes from '../../components/TaskNotes'; // Adjust path if necessary
 
 describe('TaskNotes Component', () => {
   const defaultProps = {

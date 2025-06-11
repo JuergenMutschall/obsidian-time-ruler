@@ -1,9 +1,9 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import Unscheduled from './Unscheduled';
+import Toggle from '../../components/Toggle';
 
-describe('Unscheduled', () => {
+describe('Toggle', () => {
   it('renders without crashing', () => {
-    render(<Unscheduled />);
+    render(<Toggle />);
   });
 });

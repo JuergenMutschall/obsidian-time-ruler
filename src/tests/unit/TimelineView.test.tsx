@@ -1,11 +1,11 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import TimelineView from './TimelineView'; // Assuming TimelineViewProps might be needed for defaultProps
+import TimelineView from '../../components/TimelineView'; // Assuming TimelineViewProps might be needed for defaultProps
 // If TimelineViewProps is not exported from './TimelineView', this test might need adjustment
 // or the type might need to be defined locally or imported from its actual location.
 
 // Mock the store, similar to TimeRulerHeader.test.tsx
-jest.mock('../app/store', () => ({
+jest.mock('../../app/store', () => ({
   useAppStore: jest.fn((selector) => selector({
     // Provide any specific state slices TimelineView might indirectly depend on via props
     // or utility functions. For now, keeping it minimal.

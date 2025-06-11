@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import TaskTags from './TaskTags'; // Adjust path if necessary, assuming it's in the same folder for now or ./TaskTags if tests are in components folder
+import TaskTags from '../../components/TaskTags'; // Adjust path if necessary, assuming it's in the same folder for now or ./TaskTags if tests are in components folder
 
 describe('TaskTags Component', () => {
   const defaultProps = {

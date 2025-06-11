@@ -1,9 +1,9 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-import { Timer } from './Timer';
+import Unscheduled from '../../components/Unscheduled';
 
-describe('Timer', () => {
+describe('Unscheduled', () => {
   it('renders without crashing', () => {
-    render(<Timer />);
+    render(<Unscheduled />);
   });
 });
