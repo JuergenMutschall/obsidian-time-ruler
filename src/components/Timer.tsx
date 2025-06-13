@@ -155,7 +155,7 @@ export function Timer() {
     <div
       className={`relative my-1 flex w-full items-center justify-center rounded-icon font-menu text-sm child:relative child:h-full py-0.5 h-12 flex-none ${
         borders ? 'border-solid border-divider border-[1px]' : ''
-      } ${negative ? 'bg-red-800/50' : 'bg-code'}`}
+       } ${negative ? 'bg-red-800/50' : 'theme-bg-secondary'} theme-text-normal`}
     >
       <div
         className={`!absolute left-0 top-0 h-full flex-none rounded-icon ${
@@ -176,7 +176,7 @@ export function Timer() {
           className='w-[4em] !border-none bg-transparent text-center !shadow-none'
         ></input>
       ) : (
-        <pre className='my-0 mr-1 !h-fit'>{`${negative ? '-' : ''}${
+         <pre className='my-0 mr-1 !h-fit theme-text-accent'>{`${negative ? '-' : ''}${
           hours > 0 ? hours + ':' : ''
         }${hours > 0 ? String(minutes).padStart(2, '0') : minutes}:${String(
           seconds

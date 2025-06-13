@@ -122,7 +122,7 @@ const TimeRulerHeader = ({
 
   return (
     <>
-      <div className={`flex w-full items-center space-x-1 rounded-icon`}>
+       <div className={`flex w-full items-center space-x-1 rounded-icon theme-bg-secondary theme-text-normal`}>
         <div
           className={`${
             calendarMode
@@ -140,13 +140,13 @@ const TimeRulerHeader = ({
             />
             {showingModal && (
               <div
-                className='tr-menu'
+                 className='tr-menu theme-bg-primary theme-text-normal'
                 ref={modalFrame}
                 onClick={() => setShowingModal(false)}
               >
                 <div className='flex flex-col items-center'>
                   <div
-                    className='clickable-icon w-full'
+                    className='clickable-icon w-full theme-interactive-normal'
                     onClick={() => {
                       setters.set({ showingPastDates: !showingPastDates });
                     }}
@@ -160,7 +160,7 @@ const TimeRulerHeader = ({
                     </span>
                   </div>
                   <div
-                    className='clickable-icon w-full'
+                     className='clickable-icon w-full theme-interactive-normal'
                     onClick={async () => {
                       setupStore();
                     }}
@@ -169,7 +169,7 @@ const TimeRulerHeader = ({
                     <span className='whitespace-nowrap'>Reload</span>
                   </div>
                   <div
-                    className='clickable-icon w-full'
+                     className='clickable-icon w-full theme-interactive-normal'
                     onClick={() => {
                       getters.getObsidianAPI().setSetting({
                         hideTimes: !hideTimes,
@@ -210,7 +210,8 @@ const TimeRulerHeader = ({
                               });
                             }}
                           />
-                          <div className='text-xs text-faint'>{title}</div>
+                           <div className='text-xs theme-text-muted'>{title}</div>
++                          <div className='text-xs theme-text-muted'>{title}</div>
                         </div>
                       )
                     )}
@@ -243,6 +244,7 @@ const TimeRulerHeader = ({
                             }}
                           />
                           <div className='text-xs text-faint'>{title}</div>
++                          <div className='text-xs theme-text-muted'>{title}</div>
                         </div>
                       )
                     )}

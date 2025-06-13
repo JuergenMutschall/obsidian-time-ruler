@@ -33,7 +33,7 @@ function _Unscheduled() {
   )
 
   return (
-    <div className={`h-0 grow flex flex-col w-full`}>
+    <div className={`h-0 grow flex flex-col w-full theme-bg-secondary theme-text-normal`}>
       <div className='flex items-center space-x-1 group flex-none'>
         <div
           className='w-indent flex-none pr-1'

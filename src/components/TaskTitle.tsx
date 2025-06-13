@@ -87,10 +87,11 @@ const TaskTitle: React.FC<TaskTitleProps> = (props) => {
     status === 'x' || // Assuming 'x' means completed or cancelled
     !title
   ) {
-    titleClasses.push('text-faint');
+     titleClasses.push('theme-text-muted');
   } else {
     // Default text color if no other condition met (e.g. normal priority)
-    // titleClasses.push('text-normal'); // Or whatever the default was, often inherited
+     // This makes the main title text look like a link, as it's clickable
+     titleClasses.push('text-[var(--text-accent)]', 'hover:underline');
   }
 
   return (

@@ -112,7 +112,7 @@ const TimelineView = forwardRef<TimelineViewHandle, TimelineViewProps>((props, r
 
   return (
     <div
-      className={`flex h-full w-full snap-mandatory rounded-icon text-base child:flex-none child:snap-start ${childClass} !overflow-x-auto overflow-y-clip child:h-full snap-x`}
+      className={`flex h-full w-full snap-mandatory rounded-icon text-base child:flex-none child:snap-start ${childClass} !overflow-x-auto overflow-y-clip child:h-full snap-x theme-bg-primary theme-text-normal`}
       id='time-ruler-times'
       data-auto-scroll={calendarMode ? 'y' : 'x'}
       ref={scroller}
