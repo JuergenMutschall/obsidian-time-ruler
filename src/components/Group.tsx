@@ -100,7 +100,7 @@ export default function Group({
   return (
     <div
       ref={!isPriority ? setNodeRef : undefined}
-      className={`w-full overflow-hidden time-ruler-group ${
+      className={`w-full overflow-hidden time-ruler-group theme-bg-secondary ${
         type === 'unscheduled' ? 'max-h-full !overflow-y-auto snap-start' : ''
       }`}
       data-id={`${headingPath}::${dragContainer}::${type}`}
@@ -123,7 +123,7 @@ export default function Group({
               <div className='h-2 w-full rounded-icon'></div>
             )}
             <div
-              className={`selectable flex rounded-icon font-menu text-xs group w-full`}
+               className={`selectable flex rounded-icon font-menu text-xs group w-full theme-text-normal theme-interactive-normal`}
             >
               <div className='w-indent flex-none px-1'>
                 <Button

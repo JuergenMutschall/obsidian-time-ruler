@@ -283,7 +283,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
             overflow: 'clip',
             padding: '4px 8px 8px',
           }}
-          className={`time-ruler-container sidebar-color`}
+          className={`time-ruler-container sidebar-color theme-bg-primary theme-text-normal`}
         >
           <DragOverlay
             dropAnimation={null}

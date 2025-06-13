@@ -170,7 +170,7 @@ function Time({ time, type, dragContainer }: TimeProps) {
           }`}
         ></hr>
         <div
-          className={`ml-1 h-full flex-none font-menu text-xs w-4 hover:text-accent text-muted`}
+          className={`ml-1 h-full flex-none font-menu text-xs w-4 hover:text-accent theme-text-normal`}
         >
           {(type === 'minutes' && minutes === 0) ||
           (type === 'hours' && hours % 3 === 0)

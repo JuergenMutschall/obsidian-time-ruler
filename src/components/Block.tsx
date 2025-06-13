@@ -176,7 +176,7 @@ export default function Block({
       <div
         id={id}
         data-role='block'
-        className={`relative w-full rounded-icon ${
+        className={`relative w-full rounded-icon theme-bg-secondary ${
           type !== 'child' ? 'bg-code pb-2' : ''
         } ${type === 'event' ? 'mt-1' : ''}`}
         ref={draggable ? setNodeRef : undefined}
@@ -189,7 +189,7 @@ export default function Block({
             }`}
           >
             <div
-              className={`selectable flex rounded-icon font-menu text-xs w-full py-0.5 group`}
+              className={`selectable flex rounded-icon font-menu text-xs w-full py-0.5 group theme-text-normal`}
             >
               <div className='w-indent flex-none px-1'>
                 <Button
@@ -216,7 +216,7 @@ export default function Block({
                 </div>
 
                 <div
-                  className='w-full flex items-center cursor-grab pr-2'
+                  className='w-full flex items-center cursor-grab pr-2 theme-interactive-normal'
                   {...attributes}
                   {...listeners}
                   ref={setActivatorNodeRef}
@@ -288,7 +288,7 @@ export default function Block({
             )}
         </div>
         {events[0] && (events[0].location || events[0].notes) && (
-          <div className='py-2 pl-indent text-xs'>
+           <div className='py-2 pl-indent text-xs theme-text-normal'>
             <div className='w-full truncate'>{events[0].location}</div>
             <div className='w-full truncate text-muted'>{events[0].notes}</div>
           </div>
