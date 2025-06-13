@@ -1,10 +1,29 @@
 // src/tests/unit/__mocks__/obsidian.js
+
+// Variable to store mock iCalendar data
+let mockIcalData = '';
+
+// Helper function for tests to set mock iCalendar data
+const setMockIcalData = (data) => {
+  mockIcalData = data;
+};
+
+// The actual mock for obsidian.request
+const requestMock = jest.fn((options) => {
+  if (typeof options === 'string' && options.endsWith('.ics')) {
+    return Promise.resolve(mockIcalData);
+  }
+  // Delegate to a generic jest.fn() for other calls
+  return jest.fn()();
+});
+
 module.exports = {
   setIcon: jest.fn(),
   Platform: {
     isMobile: false, // Default mock value
   },
-  request: jest.fn(),
+  request: requestMock, // Use the new request mock
+  setMockIcalData, // Expose the helper function
   Component: class { constructor() { this.load = jest.fn(); this.unload = jest.fn(); } },
   Notice: jest.fn(),
   TFile: class {},
