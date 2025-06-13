@@ -63,7 +63,7 @@ export default function Search() {
         className='modal-bg'
         onClick={() => setters.set({ searchStatus: false })}
       ></div>
-      <div className='prompt'>
+       <div className='prompt theme-bg-secondary theme-text-normal'>
         <div className='prompt-input-container'>
           <input
             className='prompt-input'
@@ -85,7 +85,7 @@ export default function Search() {
             <div
               key={task.id}
               data-info={task.id}
-              className='clickable-icon suggestion-item mod-complex'
+               className='clickable-icon suggestion-item mod-complex theme-interactive-normal'
               onClick={() => {
                 openTaskInRuler(task.id)
                 setters.set({ searchStatus: false })

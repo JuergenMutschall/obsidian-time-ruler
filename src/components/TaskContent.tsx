@@ -59,7 +59,7 @@ const TaskContent: React.FC<TaskContentProps> = (props) => {
 
   return (
     <div
-      className='flex w-full h-full cursor-grab'
+      className='flex w-full h-full cursor-grab theme-interactive-normal'
       {...dndAttributes}
       {...dndListeners}
     >

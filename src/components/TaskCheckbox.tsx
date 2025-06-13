@@ -18,10 +18,14 @@ const TaskCheckbox: React.FC<TaskCheckboxProps> = (props) => {
       onClick={onComplete}
       className={`
         task-list-item-checkbox flex flex-none items-center justify-center
-        rounded-checkbox border border-solid border-faint p-0 text-xs shadow-none
-        hover:border-normal cursor-pointer
+        rounded-checkbox p-0 text-xs shadow-none cursor-pointer
         ${isLink ? 'h-2 w-2' : isMobile ? 'h-5 w-5' : 'h-4 w-4'}
-        ${completed ? 'bg-faint' : 'bg-transparent'}
+        border border-solid
+        ${
+          completed
+            ? 'bg-[var(--interactive-accent)] border-[var(--interactive-accent)] text-[var(--text-on-accent)]'
+            : 'bg-transparent border-[var(--background-modifier-border)] hover:border-[var(--background-modifier-border-hover)]'
+        }
       `}
       data-task={status === ' ' ? '' : status}
     >

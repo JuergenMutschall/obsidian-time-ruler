@@ -240,7 +240,7 @@ export default function Task({
 
   return (
     <div
-      className={`relative rounded-icon transition-colors duration-300 w-full min-h-line`}
+      className={`relative rounded-icon transition-colors duration-300 w-full min-h-line theme-bg-secondary theme-text-normal`}
       data-id={isLink ? '' : task.id}
       data-task={task.status === ' ' ? '' : task.status}
     >

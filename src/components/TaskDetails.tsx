@@ -55,7 +55,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = (props) => {
           </div>
         )}
         {!task.completed && task.reminder && (
-          <div className='task-reminder ml-2 flex items-center whitespace-nowrap font-menu text-xs text-normal'>
+           <div className='task-reminder ml-2 flex items-center whitespace-nowrap font-menu text-xs theme-text-muted'>
             <Logo src='alarm-clock' className='mr-1' />
             <span>{`${DateTime.fromISO(task.reminder.slice(0, 10)).toFormat('M/d')}${task.reminder.slice(10)}`}</span>
           </div>
@@ -111,7 +111,7 @@ const TaskDetails: React.FC<TaskDetailsProps> = (props) => {
       {/* Original: {!task.completed && task.reminder && !dragging && (...)} */}
       {/* The `!dragging` part is handled by the component's top-level return null. So this is fine. */}
       {!task.completed && task.reminder && (
-         <div className='task-reminder ml-2 flex items-center whitespace-nowrap font-menu text-xs text-normal'>
+          <div className='task-reminder ml-2 flex items-center whitespace-nowrap font-menu text-xs theme-text-muted'>
            <Logo src='alarm-clock' className='mr-1' />
            <span>{`${DateTime.fromISO(task.reminder.slice(0, 10)).toFormat('M/d')}${task.reminder.slice(10)}`}</span>
          </div>

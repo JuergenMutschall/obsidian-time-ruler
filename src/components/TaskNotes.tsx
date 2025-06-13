@@ -13,7 +13,7 @@ const TaskNotes: React.FC<TaskNotesProps> = (props) => {
   }
 
   return (
-    <div className='task-description break-words pl-indent pr-2 text-xs text-faint'>
+    <div className='task-description break-words pl-indent pr-2 text-xs theme-text-muted'>
       {notes}
     </div>
   );

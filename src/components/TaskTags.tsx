@@ -19,7 +19,7 @@ const TaskTags: React.FC<TaskTagsProps> = (props) => {
           // Classes from Task.tsx for individual tag elements:
           // 'cm-hashtag cm-hashtag-end cm-hashtag-begin !h-fit !text-xs'
           // These are standard Obsidian classes for tags.
-          className='cm-hashtag cm-hashtag-end cm-hashtag-begin !h-fit !text-xs'
+           className='cm-hashtag cm-hashtag-end cm-hashtag-begin !h-fit !text-xs theme-bg-secondary theme-text-normal'
           key={tag}
         >
           {tag.replace('#', '')}

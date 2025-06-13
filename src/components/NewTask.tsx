@@ -149,7 +149,7 @@ export default function NewTask({ dragContainer }: { dragContainer: string }) {
       {newTaskData && newTask && newTaskMode && (
         <div className='fixed left-0 top-0 z-40 !mx-0 flex h-full w-full items-center justify-center p-8 space-y-2 '>
           <div
-            className='flex h-full max-h-[50vh] w-full flex-col space-y-1 overflow-y-auto overflow-x-hidden rounded-icon border border-solid border-faint bg-code p-2 max-w-2xl backdrop-blur'
+            className='flex h-full max-h-[50vh] w-full flex-col space-y-1 overflow-y-auto overflow-x-hidden rounded-icon border border-solid border-faint theme-bg-primary theme-text-normal p-2 max-w-2xl backdrop-blur'
             ref={frame}
           >
             <div className='flex items-center'>
@@ -250,7 +250,7 @@ function NewTaskHeading({
         }
         setTimeout(() => setters.set({ newTask: null }))
       }}
-      className={`flex items-center w-full selectable cursor-pointer rounded-icon px-2 hover:underline ${
+      className={`flex items-center w-full selectable cursor-pointer rounded-icon px-2 hover:underline theme-interactive-normal ${
         headingPath.includes('#') ? 'text-muted' : 'font-bold text-accent'
       }`}
     >

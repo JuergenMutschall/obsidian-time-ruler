@@ -41,13 +41,13 @@ const TaskSubtaskList: React.FC<TaskSubtaskListProps> = (props) => {
         }`}
       >
         <div
-          className='h-full w-full transition-colors duration-200 hover:bg-selection rounded-icon flex items-center justify-center cursor-pointer'
+           className='h-full w-full transition-colors duration-200 hover:bg-selection rounded-icon flex items-center justify-center cursor-pointer theme-interactive-normal'
           onClick={onToggleCollapse}
         >
           <div
             className={`${
               collapsed ? 'h-0 w-full border-t' : 'w-0 h-full border-l'
-            } border-0 border-solid border-faint opacity-50`}
+             } border-0 border-solid border-[var(--background-modifier-border)] opacity-50`}
           />
         </div>
       </div>
