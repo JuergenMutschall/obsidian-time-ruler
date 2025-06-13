@@ -191,8 +191,10 @@ export default function Day({
   }
 
   return (
-    <div className={`flex flex-col overflow-hidden relative`}>
-      <div className='flex items-center group relative z-10'>
+    <div
+      className={`flex flex-col overflow-hidden relative theme-bg-primary theme-text-normal`}
+    >
+      <div className='flex items-center group relative z-10 theme-bg-secondary'>
         <Droppable
           data={{ scheduled: startDate }}
           id={dragContainer + '::' + startISO + '::timeline'}
@@ -200,7 +202,7 @@ export default function Day({
           <div className='flex items-center grow'>
             <div className='flex-none w-indent pr-1'>
               <Button
-                className='flex-none w-full'
+                className='flex-none w-full theme-interactive-normal'
                 src={collapsed ? 'chevron-right' : 'chevron-down'}
                 onClick={() => {
                   setters.patchCollapsed([id], !collapsed)
@@ -210,7 +212,7 @@ export default function Day({
             </div>
 
             <div
-              className='font-menu w-full cursor-pointer hover:underline'
+              className='font-menu w-full cursor-pointer hover:underline theme-text-normal'
               onClick={async () => {
                 const dailyNoteInfo = getters.get('dailyNoteInfo')
                 const path = parsePathFromDate(startDate, dailyNoteInfo)
@@ -252,7 +254,7 @@ export default function Day({
           upcoming.tasks.length >
           0 && (
           <div
-            className={`relative w-full child:mb-1 overflow-x-hidden rounded-icon mt-1 ${
+            className={`relative w-full child:mb-1 overflow-x-hidden rounded-icon mt-1 theme-border-primary ${
               {
                 hour: wide
                   ? '!h-full'
@@ -339,11 +341,13 @@ export default function Day({
               >
                 <div className='h-full grow flex font-menu items-center space-x-2 pl-indent'>
                   <span className='text-xs text-accent'>Now</span>
-                  <hr className='w-full border-selection'></hr>
+                  <hr className='w-full border-selection theme-border-primary'></hr>
                 </div>
               </Droppable>
               <Button
-                className={`ml-1 ${isNow && focus ? 'bg-accent' : ''}`}
+                className={`ml-1 theme-interactive-normal ${
+                  isNow && focus ? 'bg-accent' : ''
+                }`}
                 src={focus ? 'minimize-2' : 'maximize-2'}
                 title='focus on now'
                 onClick={() => {

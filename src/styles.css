@@ -44,4 +44,43 @@
   .force-hover {
     @apply transition-colors duration-300;
   }
+
+  .theme-bg-primary {
+    background-color: var(--background-primary);
+  }
+
+  .theme-bg-secondary {
+    background-color: var(--background-secondary);
+  }
+
+  .theme-text-normal {
+    color: var(--text-normal);
+  }
+
+  .theme-text-muted {
+    color: var(--text-muted);
+  }
+
+  .theme-text-accent {
+    color: var(--text-accent);
+  }
+
+  .theme-border-primary {
+    border-color: var(--background-modifier-border);
+  }
+
+  .theme-interactive-normal {
+    background-color: var(--background-secondary);
+    color: var(--text-normal);
+    border-color: var(--background-modifier-border);
+  }
+
+  .theme-interactive-accent {
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+  }
+
+  .theme-interactive-accent-hover {
+    background-color: var(--interactive-accent-hover);
+  }
 }
