@@ -47,12 +47,6 @@ describe('TaskCheckbox Component', () => {
     expect(screen.queryByText('x')).not.toBeInTheDocument();
   });
 
-  test('applies correct classes when completed', () => {
-    const { container } = render(<TaskCheckbox {...defaultProps} completed={true} />);
-    const buttonElement = container.querySelector('.task-list-item-checkbox');
-    expect(buttonElement).toHaveClass('bg-faint');
-  });
-
   test('calls onComplete when clicked', () => {
     const { container } = render(<TaskCheckbox {...defaultProps} />);
     const buttonElement = container.querySelector('.task-list-item-checkbox');

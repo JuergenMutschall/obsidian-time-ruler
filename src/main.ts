@@ -263,3 +263,5 @@ export default class TimeRulerPlugin extends Plugin {
     this.saveData(this.settings)
   }
 }
+
+/* nosourcemap */

@@ -138,9 +138,9 @@ export default function NewTask({ dragContainer }: { dragContainer: string }) {
               window.addEventListener('mouseup', checkForClick)
             }}
             ref={setNodeRef}
-            className={`relative flex-none cursor-grab !rounded-full bg-accent child:invert ${
+            className={`relative flex-none cursor-grab !rounded-full bg-accent ${
               calendarMode ? 'h-8 w-8' : 'h-10 w-10'
-            }`}
+            } theme-interactive-accent theme-interactive-accent-hover`}
             src='plus'
           />
         </>
