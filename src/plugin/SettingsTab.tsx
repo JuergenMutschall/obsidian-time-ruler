@@ -13,6 +13,7 @@ import {
 import { useEffect, useRef } from 'react'
 import { Root, createRoot } from 'react-dom/client'
 import TimeRulerPlugin from '../main'
+import { ButtonColorSettings } from '../types'
 
 const WEBCAL = 'webcal'
 
@@ -333,6 +334,82 @@ export default class SettingsTab extends PluginSettingTab {
           this.plugin.saveSettings()
         })
       )
+
+    // Button Color Settings Section
+    new Setting(containerEl)
+      .setName('Button Background Color')
+      .setDesc('Set the background color for buttons.')
+      .addColorPicker((colorPicker) => {
+        colorPicker
+          .setValue(this.plugin.settings.buttonColors?.backgroundColor || '')
+          .onChange(async (value) => {
+            this.plugin.settings.buttonColors = {
+              ...(this.plugin.settings.buttonColors || {}),
+              backgroundColor: value,
+            };
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Button Text Color')
+      .setDesc('Set the text color for buttons.')
+      .addColorPicker((colorPicker) => {
+        colorPicker
+          .setValue(this.plugin.settings.buttonColors?.textColor || '')
+          .onChange(async (value) => {
+            this.plugin.settings.buttonColors = {
+              ...(this.plugin.settings.buttonColors || {}),
+              textColor: value,
+            };
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Button Border Color')
+      .setDesc('Set the border color for buttons.')
+      .addColorPicker((colorPicker) => {
+        colorPicker
+          .setValue(this.plugin.settings.buttonColors?.borderColor || '')
+          .onChange(async (value) => {
+            this.plugin.settings.buttonColors = {
+              ...(this.plugin.settings.buttonColors || {}),
+              borderColor: value,
+            };
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Button Hover Background Color')
+      .setDesc('Set the background color for buttons on hover.')
+      .addColorPicker((colorPicker) => {
+        colorPicker
+          .setValue(this.plugin.settings.buttonColors?.hoverBackgroundColor || '')
+          .onChange(async (value) => {
+            this.plugin.settings.buttonColors = {
+              ...(this.plugin.settings.buttonColors || {}),
+              hoverBackgroundColor: value,
+            };
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName('Button Active Background Color')
+      .setDesc('Set the background color for buttons when active (pressed).')
+      .addColorPicker((colorPicker) => {
+        colorPicker
+          .setValue(this.plugin.settings.buttonColors?.activeBackgroundColor || '')
+          .onChange(async (value) => {
+            this.plugin.settings.buttonColors = {
+              ...(this.plugin.settings.buttonColors || {}),
+              activeBackgroundColor: value,
+            };
+            await this.plugin.saveSettings();
+          });
+      });
 
     let newCalendarLink: TextComponent
     new Setting(containerEl)

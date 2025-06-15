@@ -148,6 +148,14 @@ declare global { // Re-opened for other types if necessary, or could be removed 
     | { type: 'move' }
 }
 
+export interface ButtonColorSettings {
+  backgroundColor?: string;
+  textColor?: string;
+  borderColor?: string;
+  hoverBackgroundColor?: string;
+  activeBackgroundColor?: string;
+}
+
 declare module 'obsidian' {
   interface App {
     isMobile: boolean

@@ -16,6 +16,7 @@ import { ISO_MATCH, taskToText, textToTask } from './services/parser'
 import { getters, setters } from './app/store'
 import invariant from 'tiny-invariant'
 import { roundMinutes, toISO } from './services/util'
+import { ButtonColorSettings } from './types'
 
 // comment out for dev
 // import './tests/parser.test'
@@ -45,6 +46,7 @@ type TimeRulerSettings = {
   viewMode: 'hour' | 'day' | 'week'
   scheduledSubtasks: boolean
   openInMain: boolean
+  buttonColors?: ButtonColorSettings;
 }
 
 export const DEFAULT_SETTINGS: TimeRulerSettings = {
@@ -72,6 +74,7 @@ export const DEFAULT_SETTINGS: TimeRulerSettings = {
   viewMode: 'day',
   scheduledSubtasks: true,
   openInMain: false,
+  buttonColors: {},
 }
 
 export default class TimeRulerPlugin extends Plugin {
