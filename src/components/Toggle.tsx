@@ -18,7 +18,7 @@ export default function Toggle({
   useEffect(() => {
     invariant(frame.current)
     if (!thisSetting.current) {
-      thisSetting.current = new Setting(frame.current).setName('tasks')
+      thisSetting.current = new Setting(frame.current).setName(title)
     }
     thisSetting.current.addToggle((toggle) => {
       thisToggle.current = toggle

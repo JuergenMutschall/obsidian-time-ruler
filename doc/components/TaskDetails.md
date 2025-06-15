@@ -27,7 +27,6 @@ The component accepts the following props:
 *   **Reminder Display**:
     *   If the task is not completed (`!task.completed`) and a `task.reminder` exists, it displays a reminder.
     *   This includes an alarm clock icon (using the `Logo` component with `src='alarm-clock'`) and the formatted reminder date and time (e.g., "9/15 10:00 AM"). The date is formatted as 'M/d' and appended with the time part of the ISO string.
-    *   (Note: The source code contains two blocks for rendering reminders with the same conditions; functionally, this results in a reminder being displayed if the conditions are met.)
 *   **Task Duration (Length) Draggable**:
     *   Rendered if `hasLengthDrag` is `true`.
     *   Provides a draggable area (using `setLengthNodeRef`, `lengthAttributes`, `lengthListeners`) for adjusting the task's duration.

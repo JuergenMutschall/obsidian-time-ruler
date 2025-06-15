@@ -240,11 +240,7 @@ export const isLengthType = (type?: DragData['dragType']) =>
   (type && type === 'task-length') || type === 'time'
 
 export const removeNestedChildren = (id: string, taskList: TaskProps[]) => {
-  for (let child of taskList) {
-    if (child.parent === id) {
-      _.remove(taskList, child)
-    }
-  }
+  _.remove(taskList, (task) => task.parent === id);
 }
 
 export const parseTaskDate = (

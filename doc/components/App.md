@@ -17,7 +17,7 @@ The `App` component itself manages minimal local state, primarily related to UI 
 
 *   **`weeksShownState: number` (via `useState(1)`)**:
     *   Represents the number of weeks the `TimelineView` should display.
-    *   Managed by `AppInitializer` and `TimeRulerHeader` through the `setWeeksShown` callback. `App` itself doesn't directly modify this but uses its value for calculations.
+    *   This is a local `useState` in `App.tsx`. The `setWeeksShown` callback is passed to `AppInitializer` (which can adjust it based on `calendarMode`) and `TimeRulerHeader` (for user interaction). `App` itself doesn't directly modify this but uses its value for calculations.
 
 It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setters`) for most of its data and UI logic. Key store states utilized include:
 
@@ -62,14 +62,14 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
     *   `onDragEnd`: Set to a callback that calls `onDragEnd(event, activeDragRef)` (from `src/services/dragging.ts`), where `activeDragRef` is a ref to the current `dragData` from the store.
     *   `onDragCancel`: Clears `dragData` in the store.
     *   `collisionDetection`: Uses `pointerWithin`.
-    *   `measuring`: Configured with custom `measure` functions for `draggable` and `dragOverlay` that account for the `timeRulerContainerRef`'s bounding box. This ensures items are measured relative to the TimeRuler container.
+    *   `measuring`: Configured with custom `measure` functions for `draggable` and `dragOverlay` that account for the `timeRulerContainerRef`'s bounding box. The `measure` functions include fallback logic using `getBoundingClientRect` if `timeRulerContainerRef.current` is not yet available. This ensures items are measured relative to the TimeRuler container.
     *   `sensors`: Configures `PointerSensor`, `MouseSensor` (for desktop), and `TouchSensor` (for mobile) with specific activation constraints (delay, tolerance).
     *   `autoScroll`: Explicitly set to `false` for the `DndContext` itself, as auto-scrolling is handled by the `useAutoScroll` hook internally or within `[TimelineView](./TimelineView.md)`.
 *   **`getDragElement()`**: A helper function that returns the appropriate React element to render in the `DragOverlay` based on `activeDrag.dragType` (e.g., `<[Task](./Task.md)]>`, `<[Group](./Group.md)]>`, `<[Block](./Block.md)]>`).
 
 ### 4. Timeline Data Calculation (`times` array)
 
-*   The `App` component calculates the `times` array (`ActualTimesType`), which defines the segments to be rendered by `[TimelineView](./TimelineView.md)`.
+*   The `App` component calculates the `times` array (`ActualTimesType`), which defines the segments to be rendered by `[TimelineView](./TimelineView.md)`. `nowForTimes = DateTime.now()` is captured at the beginning of this calculation.
 *   This array includes:
     *   An initial `{ type: 'unscheduled' }` segment.
     *   A "current" segment representing today (or the past leading up to "now" if `showingPastDates` is true). Its `startISO` and `endISO` are dynamically calculated based on `nowForTimes` (current moment), `today` (start of today), `dayStart` (from settings), and `showingPastDates`.
@@ -85,7 +85,7 @@ It heavily relies on the global Zustand store (`useAppStore`, `getters`, `setter
 
 *   **`[AppInitializer](./AppInitializer.md)`**:
     *   Receives the `reload` function, `weeksShownState`, `setWeeksShown`, `showingPastDates`, `searchWithinWeeks`, `calendarMode`, and `timelineViewRef`.
-    *   Responsible for triggering the initial `reload` and managing effects related to `weeksShownState` changes (which might trigger further data loads).
+    *   Responsible for triggering the initial `reload` and managing effects related to `weeksShownState` changes (which might trigger further data loads). Many `useEffect` hooks related to initial data loading, settings application, and reactions to settings changes (like `calendarMode` affecting `weeksShown`, or `searchQuery` affecting `weeksShown` via `searchWithinWeeks`) are primarily managed within `AppInitializer.tsx`.
 *   **`[TimeRulerHeader](./TimeRulerHeader.md)`**:
     *   Receives a simplified `times` array, `datesShown`, `weeksShownState`, `setWeeksShown`, the `reload` function (as `setupStore`), `showingPastDates`, and `timelineViewRef`.
     *   Handles user interactions for navigation and view adjustments.

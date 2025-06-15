@@ -34,19 +34,19 @@ The service exports a single React hook:
         *   For each such element, it checks if the current cursor position (`pos.x`, `pos.y`) is within its bounds.
         *   **Vertical Scrolling**: If the cursor is within a `MARGIN` (10px) of the top or bottom edge of a `data-auto-scroll="y"` element:
             *   Sets `found = true`.
-            *   If no `timeout.current` is set, it initiates a `setTimeout` to call `scrollBy(el, { top: -height / height })` after `WAIT_TIME`.
+            *   If no `timeout.current` is set, it initiates a `setTimeout` to call `scrollBy(el, { top: -el.clientHeight })` (for scrolling up) or `scrollBy(el, { top: el.clientHeight })` (for scrolling down) after `WAIT_TIME`.
             *   Breaks the loop (assuming only one scrollable area should react at a time).
         *   If no vertical scroll target was found (`!found`), it then iterates through elements with `data-auto-scroll="x"`.
         *   **Horizontal Scrolling**: Similarly, if the cursor is within `MARGIN` of the left or right edge of a `data-auto-scroll="x"` element:
             *   Sets `found = true`.
-            *   Initiates a `setTimeout` to call `scrollBy(el, { left: -width / width })` after `WAIT_TIME`.
+            *   Initiates a `setTimeout` to call `scrollBy(el, { left: -el.clientWidth })` (for scrolling left) or `scrollBy(el, { left: el.clientWidth })` (for scrolling right) after `WAIT_TIME`.
             *   Breaks the loop.
     *   **Timeout Clearing**: If `!found` (cursor is not near any edge of a scrollable area) and a `timeout.current` exists, it clears the timeout to prevent accidental scrolling.
 
 4.  **`scrollBy` Function**:
     *   Sets `scrolling.current = true`.
     *   Clears `timeout.current`.
-    *   Performs the actual scroll using `el.scrollBy({ ...object, behavior: 'smooth' })`. The `object` is like `{ top: -height }` or `{ left: width }`.
+    *   Performs the actual scroll using `el.scrollBy({ ...object, behavior: 'smooth' })`. The `object` is like `{ top: -el.clientHeight }` or `{ left: el.clientWidth }`.
     *   Sets a `setTimeout` to reset `scrolling.current = false` after `750ms` (allowing the smooth scroll animation to roughly complete).
 
 ## Data Types and Interfaces

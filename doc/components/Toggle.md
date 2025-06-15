@@ -7,7 +7,7 @@ The `Toggle` component serves as a React bridge to Obsidian's native UI componen
 ## Props
 
 *   **`callback`** (`(state: boolean) => void`): A function that is called whenever the state of the toggle changes. It receives the new boolean state (true if on, false if off) as an argument.
-*   **`title`** (`string`): The title or label for the setting that this toggle controls. This string is passed to `setName()` of the Obsidian `Setting` component. *Note: In the provided code, `thisSetting.current.setName('tasks')` seems to be hardcoded, which might be an oversight if `title` prop is intended to be dynamic. Assuming `title` should be used.*
+*   **`title`** (`string`): The title or label for the setting that this toggle controls. This string is passed to `setName()` of the Obsidian `Setting` component, and is used to name the underlying Obsidian `Setting` instance.
 *   **`value`** (`boolean`): The current value of the toggle (true for on, false for off). This prop controls the displayed state of the toggle.
 
 ## State (managed via props and internal refs to Obsidian components)
@@ -23,7 +23,7 @@ The `Toggle` component serves as a React bridge to Obsidian's native UI componen
 1.  **Initialization (`useEffect` on mount)**:
     *   Ensures `frame.current` (the host `div`) is available.
     *   If `thisSetting.current` (the Obsidian `Setting` instance) doesn't exist, it creates a new `Setting` attached to `frame.current`.
-    *   **Hardcoded Name**: It calls `thisSetting.current.setName('tasks')`. This appears to be a fixed name and does not use the `title` prop. This might be a bug or specific design choice for a particular use case. *Ideally, it should use the `title` prop here.*
+    *   It calls `thisSetting.current.setName(title)`.
     *   It then adds a toggle to this setting using `thisSetting.current.addToggle()`.
         *   The created `ToggleComponent` instance is stored in `thisToggle.current`.
         *   The toggle's initial value is set using `toggle.setValue(value)`.

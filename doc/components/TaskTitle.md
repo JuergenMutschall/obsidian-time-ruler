@@ -35,7 +35,7 @@ The component accepts the following props:
     *   **Text Color**: The title's text color is conditionally applied:
         *   `text-accent`: If `priority` is `[TaskPriorities](../../types.md#taskpriorities).HIGHEST`.
         *   `text-faint`: If `priority` is `[TaskPriorities](../../types.md#taskpriorities).LOW`, or if `isLink` is `true`, or if `status` is `'x'` (completed/cancelled), or if the `title` is empty/null.
-        *   Default text color (often inherited): Applied if none of the above conditions for `text-accent` or `text-faint` are met (e.g., normal priority tasks).
+        *   **Default text color**: If none of the above specific conditions are met, the title is styled with `text-[var(--text-accent)]` and `hover:underline`, making it appear as an interactive link.
     *   **Max Height**: The `maxHeight` style property is dynamically calculated as `calc(${lineHeightNormal}em * 2)`, effectively limiting the title's visible area to approximately two lines based on the provided normal line height. Overflowing text will be ellipsized due to `overflow-hidden text-ellipsis`.
 *   **Event Handling**:
     *   `onMouseDown`:

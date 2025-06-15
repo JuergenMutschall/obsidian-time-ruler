@@ -56,6 +56,10 @@
 *   **ical / ical2json:** For parsing iCalendar data.
 *   **@dnd-kit/core:** For drag and drop functionality.
 
+## Detailed Documentation
+For a detailed breakdown of UI components, see the [Component Overview](./components/_OVERVIEW.md).
+For a detailed breakdown of internal services, see the [Service Overview](./services/_OVERVIEW.md).
+
 ## Network Usage
 
 The plugin makes GET requests to user-configured iCalendar URLs to fetch event data. This typically happens on startup/refresh. No other data is sent externally.

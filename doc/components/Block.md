@@ -73,7 +73,7 @@ The `Block` component utilizes both local state and data derived from the global
 *   **`showingTasks: TaskProps[]`**:
     *   Derived by filtering the input `tasks` prop. It excludes tasks that are children of other tasks *also present within the same input `tasks` array for this block*. This ensures only top-level tasks for the current block context are processed for display.
 *   **`groupedTasks: Record<string, TaskProps[]>`**:
-    *   Derived by grouping `showingTasks` using `_.groupBy`. The grouping key is determined by `getHeading(task, dailyNoteInfo, settings.groupBy, hidePaths)`. Tasks that don't fit a specific group heading (based on settings) are grouped under the `UNGROUPED` key.
+    *   Derived by grouping `showingTasks` using `_.groupBy`. The grouping key is determined by `getHeading(task, dailyNoteInfo, type === 'upcoming' ? false : settings.groupBy, hidePaths)`. Tasks that don't fit a specific group heading (based on settings) are grouped under the `UNGROUPED` key.
 *   **`sortedGroups: [string, TaskProps[]][]`**:
     *   Derived by sorting the entries of `groupedTasks`. The sorting logic depends on `settings.groupBy`:
         *   If `settings.groupBy` is `false`, no specific sorting is applied beyond `_.groupBy`'s behavior.
