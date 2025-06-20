@@ -1,8 +1,9 @@
 import { useDraggable } from '@dnd-kit/core';
 import _ from 'lodash';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react'; // Removed useState
 import invariant from 'tiny-invariant';
 import { shallow } from 'zustand/shallow';
+import { ImmerReducer, useImmerReducer } from 'immer-reducer';
 
 import { AppState, DragData, getters, setters, useAppStore } from '../app/store';
 import { convertSearchToRegExp } from '../services/util';
@@ -58,8 +59,10 @@ export function useNewTaskLogic({
   const newTaskData = useAppStore((state) => state.newTask); // Modal visibility depends on this
   const dailyNoteInfo = useAppStore((state) => state.dailyNoteInfo); // Used by modal actions
 
-  const [search, setSearch] = useState('');
-  const [titleFocus, setTitleFocus] = useState(false);
+  const [state, dispatch] = useImmerReducer(NewTaskLogicReducer, {
+    search: '',
+    titleFocus: false,
+  });
 
   // This logic for allHeadings was in NewTask.tsx, adjusted for hook context
   // It should only run/fetch if newTaskData is present
@@ -78,11 +81,11 @@ export function useNewTaskLogic({
 
   useEffect(() => {
     if (currentTask) { // Only reset search if currentTask (i.e. modal) is active
-      setSearch('');
+      dispatch.setSearch('');
     }
-  }, [currentTask]);
+  }, [currentTask, dispatch]);
 
-  const searchExp = useMemo(() => convertSearchToRegExp(search), [search]);
+  const searchExp = useMemo(() => convertSearchToRegExp(state.search), [state.search]);
   const filteredHeadings = useMemo(() => {
     if (!newTaskData) return []; // Only compute if modal is active
     return allHeadingsFromStore.filter((heading) => searchExp.test(heading));
@@ -111,7 +114,7 @@ export function useNewTaskLogic({
   };
 
   const handleSearchChange = (ev: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(ev.target.value);
+    dispatch.setSearch(ev.target.value);
   };
 
   const handleSearchKeyDown = (ev: React.KeyboardEvent<HTMLInputElement>) => {
@@ -155,10 +158,10 @@ export function useNewTaskLogic({
 
   // Group modal-related returns
   const modalLogic = newTaskData && currentTask ? {
-    search,
-    setSearch: handleSearchChange,
-    titleFocus,
-    setTitleFocus,
+    search: state.search,
+    setSearch: handleSearchChange, // This now dispatches setSearch
+    titleFocus: state.titleFocus,
+    setTitleFocus: (value: boolean) => dispatch.setTitleFocus(value),
     filteredHeadings,
     handleTitleChange,
     handleTitleKeyDown,
@@ -168,6 +171,35 @@ export function useNewTaskLogic({
     currentTaskMode,
     // dailyNoteInfo is used by one of the modal buttons, can be passed out or used as is in NewTask.tsx
   } : null;
+
+  // Ensure setTitleFocus is used in the effect for focusing title input
+  useEffect(() => {
+    const checkShowingModal = (ev: MouseEvent) => {
+      if (modalFrameRef.current && !modalFrameRef.current.contains(ev.target as Node)) {
+        setters.set({ newTask: null });
+      }
+    };
+
+    if (newTaskData) { // Only if modal is active
+      window.addEventListener('mousedown', checkShowingModal);
+      // Set titleFocus to true when modal becomes active and title input is focused
+      setTimeout(() => {
+        titleInputRef.current?.focus();
+        dispatch.setTitleFocus(true);
+      }, 0);
+      return () => {
+        window.removeEventListener('mousedown', checkShowingModal);
+        // Optionally reset titleFocus when modal is closed, if needed
+        // dispatch.setTitleFocus(false);
+      };
+    } else {
+      // Ensure titleFocus is false if modal is not active
+      if (state.titleFocus) {
+        dispatch.setTitleFocus(false);
+      }
+    }
+  }, [newTaskData, modalFrameRef, titleInputRef, dispatch, state.titleFocus]);
+
 
   return {
     // Draggable button props
@@ -181,4 +213,19 @@ export function useNewTaskLogic({
     // Modal specific logic (conditionally available)
     modal: modalLogic,
   };
+}
+
+interface NewTaskLogicState {
+  search: string;
+  titleFocus: boolean;
+}
+
+class NewTaskLogicReducer extends ImmerReducer<NewTaskLogicState> {
+  setSearch(search: string) {
+    this.draftState.search = search;
+  }
+
+  setTitleFocus(titleFocus: boolean) {
+    this.draftState.titleFocus = titleFocus;
+  }
 }
