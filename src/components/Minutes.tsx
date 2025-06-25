@@ -1,7 +1,7 @@
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { DateTime } from 'luxon'
 import { useEffect } from 'react'
-import { getters, setters, useAppStore } from '../app/store'
+import { getters, appActions, useAppStore } from '../app/store'
 import {
   isLengthType,
   roundMinutes,
@@ -109,9 +109,7 @@ function Time({ time, type, dragContainer }: TimeProps) {
 
   useEffect(() => {
     if (isDraggingTime && isOver) {
-      setters.set({
-        dragData: { ...getters.get('dragData'), end: iso } as DragData,
-      })
+      appActions.setDragData({ ...getters.get('dragData'), end: iso } as DragData)
     }
   }, [isOver, isDraggingTime])
 

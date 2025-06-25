@@ -1,7 +1,7 @@
 import _ from 'lodash'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { setters, useAppStore } from 'src/app/store'
+import { appActions, useAppStore } from 'src/app/store'
 import { openTaskInRuler } from 'src/services/obsidianApi'
 import { convertSearchToRegExp } from 'src/services/util'
 import { parseFolderFromPath } from '../services/util'
@@ -61,7 +61,7 @@ export default function Search() {
     <div className='modal-container mod-dim'>
       <div
         className='modal-bg'
-        onClick={() => setters.set({ searchStatus: false })}
+        onClick={() => appActions.setSearchStatus(false)}
       ></div>
       <div className='prompt'>
         <div className='prompt-input-container'>
@@ -71,10 +71,10 @@ export default function Search() {
             value={search}
             onChange={(ev) => setSearch(ev.target.value)}
             onKeyDown={(ev) => {
-              if (ev.key === 'Escape') setters.set({ searchStatus: false })
+              if (ev.key === 'Escape') appActions.setSearchStatus(false)
               else if (ev.key === 'Enter') {
                 if (foundTasks[0]) openTaskInRuler(foundTasks[0][1].id)
-                setters.set({ searchStatus: false })
+                appActions.setSearchStatus(false)
               }
             }}
             ref={input}
@@ -88,7 +88,7 @@ export default function Search() {
               className='clickable-icon suggestion-item mod-complex'
               onClick={() => {
                 openTaskInRuler(task.id)
-                setters.set({ searchStatus: false })
+                appActions.setSearchStatus(false)
               }}
             >
               <div

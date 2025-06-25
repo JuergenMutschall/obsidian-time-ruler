@@ -8,7 +8,7 @@ import CalendarAPI from './services/calendarApi'
 import ObsidianAPI from './services/obsidianApi'
 import { getAPI } from 'obsidian-dataview'
 import invariant from 'tiny-invariant'
-import { getters, setters } from './app/store'
+import { appActions, AppStoreProvider } from './app/store'
 
 export const TIME_RULER_VIEW = 'time-ruler-view'
 
@@ -41,9 +41,7 @@ export default class TimeRulerView extends ItemView {
           this.plugin.settings[key] = settings[key]
         }
         this.plugin.saveSettings()
-        setters.set({
-          settings: { ...this.plugin.settings },
-        })
+        appActions.setSettings({ ...this.plugin.settings })
       },
       this.app
     )
@@ -59,12 +57,14 @@ export default class TimeRulerView extends ItemView {
 
     this.root.render(
       <React.StrictMode>
-        <App
-          apis={{
-            obsidian: this.obsidianAPI,
-            calendar: this.calendarLinkAPI,
-          }}
-        />
+        <AppStoreProvider>
+          <App
+            apis={{
+              obsidian: this.obsidianAPI,
+              calendar: this.calendarLinkAPI,
+            }}
+          />
+        </AppStoreProvider>
       </React.StrictMode>
     )
   }

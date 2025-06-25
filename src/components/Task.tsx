@@ -1,7 +1,7 @@
 import { useDraggable } from '@dnd-kit/core'
 import _ from 'lodash'
 import { DateTime } from 'luxon'
-import { getters, setters, useAppStore } from '../app/store'
+import { getters, appActions, patchTasks, useAppStore } from '../app/store'
 import { openTask } from '../services/obsidianApi'
 import {
   getHeading,
@@ -35,7 +35,7 @@ export default function Task({
   ...task
 }: TaskComponentProps & { dragging?: true }) {
   const completeTask = () => {
-    setters.patchTasks([task.id], {
+    patchTasks([task.id], {
       completion: toISO(roundMinutes(DateTime.now()), true),
       completed: true,
     })
@@ -112,17 +112,13 @@ export default function Task({
         const dragOffset = rect.right - activatorEvent.clientX
         if (dragOffset !== dragOffsetRef.current) {
           dragOffsetRef.current = dragOffset
-          setters.set({
-            dragOffset,
-          })
+          appActions.setDragOffset(dragOffset)
         }
       } else if (activatorEvent instanceof TouchEvent) {
         const dragOffset = rect.right - activatorEvent.touches[0].clientX
         if (dragOffset !== dragOffsetRef.current) {
           dragOffsetRef.current = dragOffset
-          setters.set({
-            dragOffset,
-          })
+          appActions.setDragOffset(dragOffset)
         }
       }
     }
@@ -419,7 +415,7 @@ export default function Task({
           >
             <div
               className='h-full w-full transition-colors duration-200 hover:bg-selection rounded-icon flex items-center justify-center cursor-pointer'
-              onClick={() => setters.patchCollapsed([task.id], !collapsed)}
+              onClick={() => appActions.patchCollapsed([task.id], !collapsed)}
             >
               <div
                 className={`${

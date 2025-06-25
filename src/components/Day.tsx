@@ -3,7 +3,7 @@ import { DateTime } from 'luxon'
 import { useEffect, useRef, useState } from 'react'
 import invariant from 'tiny-invariant'
 import { shallow } from 'zustand/shallow'
-import { getters, setters, useAppStore } from '../app/store'
+import { getters, appActions, useAppStore } from '../app/store'
 import { openTaskInRuler } from '../services/obsidianApi'
 import {
   getStartDate,
@@ -166,12 +166,12 @@ export default function Day({
 
   const expandIfFound = () => {
     if (foundTaskInAllDay && collapsed) {
-      setters.patchCollapsed([id], false)
+      appActions.patchCollapsed([id], false)
       const foundTask = allDay.tasks.find(
         (task) => task.id === foundTaskInAllDay
       ) as TaskProps
       if (!foundTask) return
-      setters.set({ findingTask: null })
+      appActions.setFindingTask(null)
       setTimeout(() => openTaskInRuler(foundTask.id))
     }
   }
@@ -203,7 +203,7 @@ export default function Day({
                 className='flex-none w-full'
                 src={collapsed ? 'chevron-right' : 'chevron-down'}
                 onClick={() => {
-                  setters.patchCollapsed([id], !collapsed)
+                  appActions.patchCollapsed([id], !collapsed)
                   return false
                 }}
               />
@@ -349,9 +349,9 @@ export default function Day({
                 onClick={() => {
                   if (!focus) {
                     // also collapse today's tasks
-                    setters.patchCollapsed([id], true)
+                    appActions.patchCollapsed([id], true)
                   }
-                  setters.patchCollapsed([TR_NOW], !focus)
+                  appActions.patchCollapsed([TR_NOW], !focus)
                 }}
               />
             </div>

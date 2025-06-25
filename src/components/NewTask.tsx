@@ -3,7 +3,7 @@ import _ from 'lodash'
 import { useEffect, useRef, useState } from 'react'
 import invariant from 'tiny-invariant'
 import { shallow } from 'zustand/shallow'
-import { AppState, getters, setters, useAppStore } from '../app/store'
+import { AppState, getters, appActions, useAppStore } from '../app/store'
 import {
   convertSearchToRegExp,
   getHeading,
@@ -36,7 +36,7 @@ export default function NewTask({ dragContainer }: { dragContainer: string }) {
     const els = document.elementsFromPoint(ev.clientX, ev.clientY)
 
     if (!els.includes(frame.current)) {
-      setters.set({ newTask: null })
+      appActions.setNewTask(null)
     }
   }
 
@@ -80,7 +80,7 @@ export default function NewTask({ dragContainer }: { dragContainer: string }) {
 
   const checkForClick = () => {
     if (!getters.get('dragData') && !getters.get('newTask')) {
-      setters.set({ newTask: { task: { scheduled: undefined }, type: 'new' } })
+      appActions.setNewTask({ task: { scheduled: undefined }, type: 'new' })
     }
     window.removeEventListener('mouseup', checkForClick)
   }
@@ -176,11 +176,9 @@ export default function NewTask({ dragContainer }: { dragContainer: string }) {
               value={newTask.originalTitle ?? ''}
               placeholder='title...'
               onChange={(ev) =>
-                setters.set({
-                  newTask: {
-                    task: { ...newTask, originalTitle: ev.target.value },
-                    type: newTaskMode!,
-                  },
+                appActions.setNewTask({
+                  task: { ...newTask, originalTitle: ev.target.value },
+                  type: newTaskMode!,
                 })
               }
               onFocus={() => setFocus(true)}
@@ -248,7 +246,7 @@ function NewTaskHeading({
         } else {
           api.createNewTask(newTask, headingPath, dailyNoteInfo)
         }
-        setTimeout(() => setters.set({ newTask: null }))
+        setTimeout(() => appActions.setNewTask(null))
       }}
       className={`flex items-center w-full selectable cursor-pointer rounded-icon px-2 hover:underline ${
         headingPath.includes('#') ? 'text-muted' : 'font-bold text-accent'

@@ -3,7 +3,7 @@ import ical from 'ical'
 import _ from 'lodash'
 import { DateTime } from 'luxon'
 import { Component, Notice, request, ToggleComponent } from 'obsidian'
-import { getters, setters } from '../app/store'
+import { getters, appActions } from '../app/store'
 import TimeRulerPlugin from '../main'
 import { toISO } from './util'
 import moment from 'moment'
@@ -180,6 +180,6 @@ export default class CalendarAPI extends Component {
 
     await Promise.all(calendarLoads)
 
-    setters.set({ events })
+    appActions.setEvents(events)
   }
 }

@@ -13,7 +13,7 @@ import TimeRulerView, { TIME_RULER_VIEW } from './index'
 import SettingsTab from './plugin/SettingsTab'
 import { openTaskInRuler } from './services/obsidianApi'
 import { ISO_MATCH, taskToText, textToTask } from './services/parser'
-import { getters, setters } from './app/store'
+import { patchTasks } from './app/store'
 import invariant from 'tiny-invariant'
 import { roundMinutes, toISO } from './services/util'
 
@@ -223,7 +223,7 @@ export default class TimeRulerPlugin extends Plugin {
         scheduled = ''
         break
     }
-    setters.patchTasks([id], { scheduled })
+    patchTasks([id], { scheduled })
   }
 
   async activateView(main?: boolean) {

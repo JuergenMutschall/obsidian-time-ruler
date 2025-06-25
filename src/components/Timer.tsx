@@ -1,7 +1,7 @@
 import { DateTime } from 'luxon'
 import { useEffect, useRef, useState } from 'react'
 import { useStopwatch, useTimer } from 'react-timer-hook'
-import { setters, useAppStore } from '../app/store'
+import { appActions, useAppStore } from '../app/store'
 import { sounds } from '../assets/assets'
 import Button from './Button'
 
@@ -43,7 +43,7 @@ export function Timer() {
 
   useEffect(() => {
     const newPlaying = stopwatch.isRunning || timer.isRunning
-    if (newPlaying !== playing) setters.patchTimer({ playing: newPlaying })
+    if (newPlaying !== playing) appActions.patchTimer({ playing: newPlaying })
   }, [stopwatch.isRunning, timer.isRunning])
 
   const [input, setInput] = useState('')
@@ -53,11 +53,11 @@ export function Timer() {
   const currentTime = maxSeconds ? timer.totalSeconds : stopwatch.totalSeconds
 
   const start = () => {
-    setters.patchTimer({ negative: false })
+    appActions.patchTimer({ negative: false })
     let hours = 0
     let minutes = 0
     if (!input) {
-      setters.patchTimer({
+      appActions.patchTimer({
         maxSeconds: null,
         startISO: new Date().toISOString(),
       })
@@ -72,7 +72,7 @@ export function Timer() {
       }
       const endDate = DateTime.now().plus({ minutes, hours }).toJSDate()
       timer.restart(endDate)
-      setters.patchTimer({
+      appActions.patchTimer({
         maxSeconds: minutes * 60 + hours * 60 * 60,
         startISO: endDate.toISOString(),
       })
@@ -81,9 +81,9 @@ export function Timer() {
   }
 
   const reset = () => {
-    setters.patchTimer({ negative: false })
+    appActions.patchTimer({ negative: false })
     if (maxSeconds) {
-      setters.patchTimer({
+      appActions.patchTimer({
         maxSeconds: null,
       })
       timer.restart(new Date(), false)
@@ -99,7 +99,7 @@ export function Timer() {
         .plus({ seconds: timer.totalSeconds })
         .plus({ minutes: minutes })
       timer.restart(currentTime.toJSDate(), true)
-      setters.patchTimer({
+      appActions.patchTimer({
         maxSeconds: maxSeconds + minutes * 60,
         startISO: currentTime.toJSDate().toISOString(),
       })
@@ -110,7 +110,7 @@ export function Timer() {
         })
         .plus({ minutes: minutes })
       stopwatch.reset(currentTime.toJSDate(), true)
-      setters.patchTimer({ startISO: currentTime.toJSDate().toISOString() })
+      appActions.patchTimer({ startISO: currentTime.toJSDate().toISOString() })
     }
   }
 

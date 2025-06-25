@@ -14,7 +14,7 @@ import invariant from 'tiny-invariant'
 import {
   AppState,
   getters,
-  setters,
+  appActions,
   useAppStore,
   useAppStoreRef,
 } from '../app/store'
@@ -275,7 +275,7 @@ export const useChildWidth = () => {
   const recreateWindow = useAppStore((state) => state.recreateWindow)
   const setChildWidth = (newChildWidth: number) => {
     if (newChildWidth !== childWidthRef.current)
-      setters.set({ childWidth: newChildWidth })
+      appActions.setChildWidth(newChildWidth)
   }
   const [viewMode, viewModeRef] = useAppStoreRef(
     (state) => state.settings.viewMode

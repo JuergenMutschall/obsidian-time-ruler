@@ -21,7 +21,7 @@ import invariant from 'tiny-invariant'
 import {
   AppState,
   getters,
-  setters,
+  appActions,
   useAppStore,
   useAppStoreRef,
 } from '../app/store'
@@ -83,7 +83,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
       scheduledSubtasks: apis.obsidian.getSetting('scheduledSubtasks'),
     }
 
-    setters.set({
+    appActions._set({
       apis,
       dailyNoteInfo,
       settings,
@@ -114,7 +114,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
         maxSeconds &&
         new Date().toISOString() >= startISO
       ) {
-        setters.patchTimer({
+        appActions.patchTimer({
           maxSeconds: null,
           startISO: new Date().toISOString(),
           negative: true,
@@ -208,14 +208,10 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
 
   useEffect(() => {
     if (showingPastDates && -weeksShownState < searchWithinWeeks[0]) {
-      setters.set({
-        searchWithinWeeks: [-weeksShownState, searchWithinWeeks[1]],
-      })
+      appActions.setSearchWithinWeeks([-weeksShownState, searchWithinWeeks[1]])
     }
     if (!showingPastDates && weeksShownState > searchWithinWeeks[1]) {
-      setters.set({
-        searchWithinWeeks: [searchWithinWeeks[0], weeksShownState],
-      })
+      appActions.setSearchWithinWeeks([searchWithinWeeks[0], weeksShownState])
     }
   }, [showingPastDates, weeksShownState])
 
@@ -354,7 +350,7 @@ export default function App({ apis }: { apis: Required<AppState['apis']> }) {
       <DndContext
         onDragStart={onDragStart}
         onDragEnd={(ev) => onDragEnd(ev, activeDragRef)}
-        onDragCancel={() => setters.set({ dragData: null })}
+        onDragCancel={() => appActions.setDragData(null)}
         collisionDetection={pointerWithin}
         measuring={measuringConfig}
         sensors={sensors}
@@ -564,7 +560,7 @@ const Buttons = ({
                   <div
                     className='clickable-icon w-full'
                     onClick={() => {
-                      setters.set({ showingPastDates: !showingPastDates })
+                      appActions.setShowingPastDates(!showingPastDates)
                     }}
                   >
                     <Logo
@@ -671,7 +667,7 @@ const Buttons = ({
           <Button
             src='search'
             className={`${calendarMode ? 'mb-2' : ''}`}
-            onClick={() => setters.set({ searchStatus: true })}
+            onClick={() => appActions.setSearchStatus(true)}
           />
           {calendarMode && <NewTask dragContainer='buttons' />}
         </div>

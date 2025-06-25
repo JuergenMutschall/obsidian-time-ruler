@@ -7,7 +7,7 @@ import {
   parseFileFromPath,
   splitHeading,
 } from 'src/services/util'
-import { setters, useAppStore } from '../app/store'
+import { appActions, useAppStore } from '../app/store'
 import { BlockType } from './Block'
 import Button from './Button'
 import Droppable from './Droppable'
@@ -128,7 +128,7 @@ export default function Group({
                   className='group-hover:opacity-100 opacity-0 transition-opacity duration-200 h-4 py-0.5 flex-none cursor-pointer'
                   src={collapsed ? 'chevron-right' : 'chevron-down'}
                   onClick={() => {
-                    setters.patchCollapsed([headingPath], !collapsed)
+                    appActions.patchCollapsed([headingPath], !collapsed)
                     return false
                   }}
                   onPointerDown={() => false}

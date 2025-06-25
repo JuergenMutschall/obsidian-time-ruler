@@ -1,5 +1,5 @@
 import { DragEndEvent, DragStartEvent } from '@dnd-kit/core'
-import { getters, setters } from 'src/app/store'
+import { getters, appActions, patchTasks, updateFileOrder } from 'src/app/store'
 import { isTaskProps } from 'src/types/enums'
 import { DateTime, Duration } from 'luxon'
 import { useAppStoreRef } from '../app/store'
@@ -23,18 +23,18 @@ export const onDragEnd = async (
   const dragMode = getters.get('dragMode')
 
   if (ev.active.id === ev.over?.id) {
-    setters.set({ dragData: null })
+    appActions.setDragData(null)
     return
   }
 
   if (dragData?.dragType === 'task' && dropData?.type === 'move') {
-    setters.set({ newTask: { task: dragData, type: 'move' } })
+    appActions.setNewTask({ task: dragData as Partial<TaskProps>, type: 'move' })
   } else if (dropData && dragData) {
     if (!isTaskProps(dropData)) {
       switch (dropData.type) {
         case 'heading':
           if (dragData.dragType !== 'group') break
-          setters.updateFileOrder(
+          updateFileOrder(
             parseFileFromPath(dragData.headingPath),
             parseFileFromPath(dropData.heading)
           )
@@ -67,8 +67,8 @@ export const onDragEnd = async (
     } else {
       switch (dragData.dragType) {
         case 'new_button':
-          setters.set({
-            newTask: { task: { scheduled: dropData.scheduled }, type: 'new' },
+          appActions.setNewTask({
+            task: { scheduled: dropData.scheduled }, type: 'new',
           })
           break
         case 'time':
@@ -79,42 +79,40 @@ export const onDragEnd = async (
             .shiftTo('hours', 'minutes')
             .toObject() as { hours: number; minutes: number }
           if (dragData.dragType === 'task-length') {
-            setters.patchTasks([dragData.id], {
+            patchTasks([dragData.id], {
               duration: { hour: hours, minute: minutes },
             })
           } else {
-            setters.set({
-              newTask: {
-                task: {
-                  scheduled: dragData.start,
-                  duration: { hour: hours, minute: minutes },
-                },
-                type: 'new',
+            appActions.setNewTask({
+              task: {
+                scheduled: dragData.start,
+                duration: { hour: hours, minute: minutes },
               },
+              type: 'new',
             })
           }
           break
 
         case 'block':
         case 'group':
-          setters.patchTasks(
+          patchTasks(
             dragData.tasks.map((x) => x.id),
             dropData
           )
           break
         case 'task':
-          setters.patchTasks([dragData.id], dropData)
+          patchTasks([dragData.id], dropData)
           break
         case 'due':
-          setters.patchTasks([dragData.task.id], { due: dropData.scheduled })
+          patchTasks([dragData.task.id], { due: dropData.scheduled })
           break
       }
     }
   }
 
-  setters.set({ dragData: null })
+  appActions.setDragData(null)
 }
 
 export const onDragStart = (ev: DragStartEvent) => {
-  setters.set({ dragData: ev.active.data.current as DragData })
+  appActions.setDragData(ev.active.data.current as DragData)
 }

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { TaskPriorities, priorityNumberToKey } from 'src/types/enums'
 import { shallow } from 'zustand/shallow'
-import { setters, useAppStore } from '../app/store'
+import { appActions, useAppStore } from '../app/store'
 import {
   getChildren,
   getHeading,
@@ -167,7 +167,7 @@ export default function Block({
             className='flex-none w-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'
             src={collapsed ? 'chevron-right' : 'chevron-down'}
             onClick={() => {
-              setters.patchCollapsed(_.map(sortedGroups, 0), !collapsed)
+              appActions.patchCollapsed(_.map(sortedGroups, 0), !collapsed)
               return false
             }}
           />,
@@ -196,7 +196,7 @@ export default function Block({
                   className='group-hover:opacity-100 opacity-0 transition-opacity duration-200 h-4 py-0.5 flex-none'
                   src={!collapsed ? 'chevron-down' : 'chevron-right'}
                   onClick={() => {
-                    setters.patchCollapsed(
+                    appActions.patchCollapsed(
                       sortedGroups.map((x) => x[0]),
                       !collapsed
                     )
